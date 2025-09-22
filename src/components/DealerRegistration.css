@@ -1,0 +1,410 @@
+/* Dealer Registration Styles */
+.dealer-registration {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px 0;
+  width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.dealer-registration::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="80" height="80" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="40" cy="40" r="5"/></g></svg>');
+  pointer-events: none;
+}
+
+.dealer-registration .container {
+  max-width: none;
+  margin: 0;
+  padding: 0 40px;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* Header */
+.registration-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.back-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  color: #333;
+}
+
+.back-button:hover {
+  background: white;
+  transform: translateX(-3px) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.header-content h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.header-content p {
+  color: #666;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Registration Content */
+.registration-content {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+/* Progress Steps */
+.progress-steps {
+  flex: 0 0 320px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: sticky;
+  top: 20px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step.active {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.step.active .step-number {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Form */
+.registration-form {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-section {
+  margin-bottom: 3rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.form-section h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid transparent;
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s;
+  background: #fff;
+  color: #333;
+}
+
+.form-group input::placeholder {
+  color: #999;
+}
+
+.form-group select option {
+  color: #333;
+  background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+  background: white;
+  transform: translateY(-1px);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Form Actions */
+.form-actions {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid #f0f0f0;
+}
+
+.terms-section {
+  margin-bottom: 2rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-color: #667eea;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.submit-section {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #5a6fd8, #6a4190);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(5px);
+}
+
+.btn-secondary:hover {
+  background: white;
+  color: #333;
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .registration-content {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .progress-steps {
+    flex: none;
+    position: static;
+  }
+  
+  .step {
+    display: inline-flex;
+    flex-direction: column;
+    text-align: center;
+    border-bottom: none;
+    border-right: 1px solid #f0f0f0;
+    padding: 1rem;
+    min-width: 120px;
+  }
+  
+  .step:last-child {
+    border-right: none;
+  }
+  
+  .progress-steps {
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .dealer-registration .container {
+    padding: 0 20px;
+  }
+  
+  .registration-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .back-button {
+    align-self: flex-start;
+  }
+  
+  .header-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .registration-form {
+    padding: 2rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .submit-section {
+    flex-direction: column;
+  }
+  
+  .progress-steps {
+    flex-direction: column;
+  }
+  
+  .step {
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+    min-width: auto;
+  }
+  
+  .step:last-child {
+    border-bottom: none;
+  }
+}
