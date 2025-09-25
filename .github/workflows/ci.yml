@@ -1,0 +1,31 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  db-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saas
+          POSTGRES_USER: saas_user
+          POSTGRES_PASSWORD: saas_pass
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U saas_user -d saas"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Apply init.sql
+        env:
+          PGPASSWORD: saas_pass
+        run: psql -h localhost -U saas_user -d saas -f db/init.sql
+      - name: Check tenant column exists
+        env:
+          PGPASSWORD: saas_pass
+        run: |
+          psql -h localhost -U saas_user -d saas -Atc "\d productos" | grep -q tenant_id
