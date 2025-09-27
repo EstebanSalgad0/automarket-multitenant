@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AutoMarket MultiTenant
 
 Sistema de marketplace de vehículos multi-tenant que permite a automotoras y vendedores particulares gestionar sus inventarios de forma independiente y segura.
@@ -197,3 +198,7 @@ export default defineConfig([
   },
 ])
 ```
+=======
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/qAF66khh)
+# saas-multitenant-docker
+>>>>>>> 8417d8caa84daeed5da87c1d308f71769c4bc701

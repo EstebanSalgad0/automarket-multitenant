@@ -1248,3 +1248,36 @@ body {
     margin: 0 1rem;
   }
 }
+
+/* Indicador de estado de Supabase */
+.supabase-indicator {
+  font-size: 20px;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.supabase-indicator.connecting {
+  animation: spin 1s linear infinite;
+}
+
+.supabase-indicator.connected {
+  opacity: 1;
+}
+
+.supabase-indicator.error {
+  opacity: 1;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

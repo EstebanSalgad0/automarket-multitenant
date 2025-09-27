@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import UserProfile from './components/UserProfile'
 import DealerRegistration from './components/DealerRegistration'
 import SellerRegistration from './components/SellerRegistration'
 import VehiclesCatalog from './components/VehiclesCatalog'
+import { testSupabaseConnection, testSupabaseAuth } from './utils/testSupabase'
 
 function App() {
   const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog'>('home')
@@ -15,6 +16,33 @@ function App() {
     maxPrice: '',
     location: ''
   })
+  const [supabaseStatus, setSupabaseStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
+
+  // Probar conexión con Supabase al cargar
+  useEffect(() => {
+    const runTests = async () => {
+      console.log('🚀 Iniciando pruebas de Supabase...');
+      
+      try {
+        // Test de conexión
+        const connectionTest = await testSupabaseConnection();
+        const authTest = await testSupabaseAuth();
+        
+        if (connectionTest.success && authTest.success) {
+          setSupabaseStatus('connected');
+          console.log('✅ Todos los tests pasaron correctamente');
+        } else {
+          setSupabaseStatus('error');
+          console.error('❌ Algunos tests fallaron');
+        }
+      } catch (error) {
+        console.error('❌ Error ejecutando tests:', error);
+        setSupabaseStatus('error');
+      }
+    };
+
+    runTests();
+  }, [])
 
   if (currentView === 'profile') {
     return <UserProfile onBack={() => setCurrentView('home')} />
@@ -57,6 +85,12 @@ function App() {
             <button className="btn-icon" onClick={() => setCurrentView('profile')}>👤</button>
             <span className="nav-link">Iniciar sesión</span>
             <button className="btn-primary">Publicar vehículo</button>
+            {/* Indicador de estado de Supabase */}
+            <div className={`supabase-indicator ${supabaseStatus}`}>
+              {supabaseStatus === 'connecting' && '🔄'}
+              {supabaseStatus === 'connected' && '✅'}
+              {supabaseStatus === 'error' && '❌'}
+            </div>
           </div>
         </div>
       </header>
