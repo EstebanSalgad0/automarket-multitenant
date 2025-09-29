@@ -82,7 +82,7 @@ export class VehicleService {
               verified_at
             )
           )
-        `)
+        `, { count: 'exact', head: false })
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
@@ -232,9 +232,11 @@ export class VehicleService {
     error: Error | null
   }> {
     try {
-      const { data, error } = await this.supabaseClient.supabase
-        .from('vehicles')
-        .update(updates)
+      const tenantScopedUpdate = this.supabaseClient.withTenant(
+        this.supabaseClient.supabase.from('vehicles').update(updates)
+      )
+
+      const { data, error } = await tenantScopedUpdate
         .eq('id', id)
         .select()
         .single()
@@ -256,9 +258,11 @@ export class VehicleService {
   // Eliminar vehículo (cambiar estado a suspended)
   async deleteVehicle(id: string): Promise<{ error: Error | null }> {
     try {
-      const { error } = await this.supabaseClient.supabase
-        .from('vehicles')
-        .update({ status: 'suspended' })
+      const tenantScopedDeletion = this.supabaseClient.withTenant(
+        this.supabaseClient.supabase.from('vehicles').update({ status: 'suspended' })
+      )
+
+      const { error } = await tenantScopedDeletion
         .eq('id', id)
 
       if (error) throw error
@@ -390,3 +394,4 @@ export class VehicleService {
 
 // Export singleton instance
 export const vehicleService = VehicleService.getInstance()
+
