@@ -305,13 +305,15 @@ export class VehicleService {
 
         if (error) throw error
 
-        // Decrementar contador
-        await this.supabaseClient.supabase
-          .from('vehicles')
-          .update({ 
-            favorites_count: this.supabaseClient.supabase.sql`favorites_count - 1` 
-          })
-          .eq('id', vehicleId)
+        const { error: rpcError } = await this.supabaseClient.supabase.rpc(
+          'adjust_vehicle_favorites',
+          {
+            vehicle_id: vehicleId,
+            delta: -1,
+          }
+        )
+
+        if (rpcError) throw rpcError
 
         return { isFavorite: false, error: null }
       } else {
@@ -325,13 +327,15 @@ export class VehicleService {
 
         if (error) throw error
 
-        // Incrementar contador
-        await this.supabaseClient.supabase
-          .from('vehicles')
-          .update({ 
-            favorites_count: this.supabaseClient.supabase.sql`favorites_count + 1` 
-          })
-          .eq('id', vehicleId)
+        const { error: rpcError } = await this.supabaseClient.supabase.rpc(
+          'adjust_vehicle_favorites',
+          {
+            vehicle_id: vehicleId,
+            delta: 1,
+          }
+        )
+
+        if (rpcError) throw rpcError
 
         return { isFavorite: true, error: null }
       }
