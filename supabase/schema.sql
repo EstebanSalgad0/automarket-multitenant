@@ -234,7 +234,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- RPC para ajustar el contador de favoritos de un vehículo
+CREATE OR REPLACE FUNCTION adjust_vehicle_favorites(vehicle_id UUID, delta INTEGER)
+RETURNS TABLE (favorites_count INTEGER) AS $$
+DECLARE
+    current_tenant UUID := get_current_tenant_id();
+BEGIN
+    IF current_tenant IS NULL THEN
+        RAISE EXCEPTION 'Tenant not found for current user';
+    END IF;
+
+    UPDATE vehicles
+    SET favorites_count = GREATEST(favorites_count + delta, 0),
+        updated_at = NOW()
+    WHERE id = adjust_vehicle_favorites.vehicle_id
+      AND tenant_id = current_tenant
+    RETURNING favorites_count INTO favorites_count;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Vehicle not found or access denied';
+    END IF;
+
+    RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT EXECUTE ON FUNCTION adjust_vehicle_favorites(UUID, INTEGER) TO authenticated;

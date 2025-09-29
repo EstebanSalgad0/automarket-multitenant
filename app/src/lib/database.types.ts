@@ -307,7 +307,19 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      adjust_vehicle_favorites: {
+        Args: {
+          vehicle_id: string
+          delta: number
+        }
+        Returns: {
+          favorites_count: number
+        }[]
+      }
+      get_current_tenant_id: {
+        Args: Record<string, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
