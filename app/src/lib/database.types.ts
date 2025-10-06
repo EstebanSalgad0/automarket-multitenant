@@ -49,6 +49,11 @@ export interface Database {
           phone_verified_at?: string
           created_at: string
           updated_at: string
+          // Nuevos campos agregados
+          branch_id?: string
+          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          full_name?: string
+          avatar_url?: string
         }
         Insert: {
           id?: string
@@ -61,6 +66,11 @@ export interface Database {
           phone_verified_at?: string
           created_at?: string
           updated_at?: string
+          // Nuevos campos agregados
+          branch_id?: string
+          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          full_name?: string
+          avatar_url?: string
         }
         Update: {
           email?: string
@@ -70,6 +80,11 @@ export interface Database {
           email_verified_at?: string
           phone_verified_at?: string
           updated_at?: string
+          // Nuevos campos agregados
+          branch_id?: string
+          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          full_name?: string
+          avatar_url?: string
         }
       }
 
@@ -185,6 +200,9 @@ export interface Database {
           favorites_count: number
           created_at: string
           updated_at: string
+          // Nuevos campos agregados
+          branch_id?: string
+          assigned_to?: string
         }
         Insert: {
           id?: string
@@ -208,6 +226,9 @@ export interface Database {
           favorites_count?: number
           created_at?: string
           updated_at?: string
+          // Nuevos campos agregados
+          branch_id?: string
+          assigned_to?: string
         }
         Update: {
           brand?: string
@@ -227,6 +248,9 @@ export interface Database {
           views_count?: number
           favorites_count?: number
           updated_at?: string
+          // Nuevos campos agregados
+          branch_id?: string
+          assigned_to?: string
         }
       }
 
@@ -301,6 +325,151 @@ export interface Database {
           created_at?: string
         }
         Update: Record<string, never>
+      }
+
+      // Nuevas tablas agregadas
+      branches: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          slug: string
+          address?: string
+          city?: string
+          region?: string
+          phone?: string
+          email?: string
+          manager_id?: string
+          status: 'active' | 'inactive' | 'maintenance'
+          settings: any
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          name: string
+          slug: string
+          address?: string
+          city?: string
+          region?: string
+          phone?: string
+          email?: string
+          manager_id?: string
+          status?: 'active' | 'inactive' | 'maintenance'
+          settings?: any
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          slug?: string
+          address?: string
+          city?: string
+          region?: string
+          phone?: string
+          email?: string
+          manager_id?: string
+          status?: 'active' | 'inactive' | 'maintenance'
+          settings?: any
+          updated_at?: string
+        }
+      }
+
+      leads: {
+        Row: {
+          id: string
+          tenant_id: string
+          branch_id: string
+          vehicle_id: string
+          assigned_to?: string
+          customer_name: string
+          customer_email: string
+          customer_phone?: string
+          message: string
+          status: 'new' | 'contacted' | 'qualified' | 'lost' | 'sold'
+          priority: 'low' | 'medium' | 'high' | 'urgent'
+          source?: string
+          scheduled_date?: string
+          notes?: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          branch_id: string
+          vehicle_id: string
+          assigned_to?: string
+          customer_name: string
+          customer_email: string
+          customer_phone?: string
+          message: string
+          status?: 'new' | 'contacted' | 'qualified' | 'lost' | 'sold'
+          priority?: 'low' | 'medium' | 'high' | 'urgent'
+          source?: string
+          scheduled_date?: string
+          notes?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          vehicle_id?: string
+          assigned_to?: string
+          customer_name?: string
+          customer_email?: string
+          customer_phone?: string
+          message?: string
+          status?: 'new' | 'contacted' | 'qualified' | 'lost' | 'sold'
+          priority?: 'low' | 'medium' | 'high' | 'urgent'
+          source?: string
+          scheduled_date?: string
+          notes?: string
+          updated_at?: string
+        }
+      }
+
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          vehicle_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          vehicle_id: string
+          created_at?: string
+        }
+        Update: Record<string, never>
+      }
+
+      messages: {
+        Row: {
+          id: string
+          lead_id: string
+          sender_id: string
+          message: string
+          message_type: 'text' | 'image' | 'document'
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          sender_id: string
+          message: string
+          message_type?: 'text' | 'image' | 'document'
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          message?: string
+          message_type?: 'text' | 'image' | 'document'
+          is_read?: boolean
+        }
       }
     }
     Views: {

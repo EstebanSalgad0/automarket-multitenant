@@ -1,186 +1,240 @@
-<<<<<<< HEAD
-# AutoMarket MultiTenant
+# 🚗 AutoMarket MultiTenant
 
-Sistema de marketplace de vehículos multi-tenant que permite a automotoras y vendedores particulares gestionar sus inventarios de forma independiente y segura.
+Sistema corporativo de marketplace de vehículos con arquitectura multi-tenant que permite a automotoras gestionar múltiples sedes, leads, favoritos y mensajería de forma independiente y segura.
 
-## 🚗 Descripción del Proyecto
+## ✨ Características Principales
 
-AutoMarket es una plataforma que conecta compradores con vendedores de vehículos, soportando dos tipos de vendedores:
-- **Automotoras**: Con múltiples vendedores y administración centralizada
-- **Vendedores Particulares**: Usuarios independientes que venden sus propios vehículos
+### 🏢 **Gestión Corporativa Multi-Sede**
+- **Sedes/Sucursales**: Gestión de múltiples ubicaciones por tenant
+- **Sistema de Leads**: Gestión completa de consultas de clientes
+- **Favoritos de Usuarios**: Sistema de marcado de vehículos preferidos
+- **Mensajería Integrada**: Comunicación entre vendedores y clientes
 
-## 🏗️ Arquitectura Multi-Tenant
+### 👥 **Roles y Permisos**
+- **🏢 Administrador Corporativo**: Control total de la organización
+- **🏪 Gerente de Sede**: Administración de sucursal específica
+- **💼 Vendedor**: Gestión de leads y vehículos asignados
+- **🛒 Comprador**: Navegación, favoritos y consultas
 
-### Tipos de Usuarios
-- **Automotora Admin**: Administrador de una automotora (tenant)
-- **Vendedor de Automotora**: Empleado que publica vehículos para la automotora
-- **Vendedor Particular**: Usuario independiente con su propio tenant
-- **Comprador**: Visualiza vehículos y contacta vendedores
+### 🛡️ **Arquitectura Multi-Tenant Segura**
+- Aislamiento completo de datos por tenant
+- Row Level Security (RLS) en todas las tablas
+- Políticas de seguridad automatizadas
+- Gestión de roles granular
 
-### Modelo de Datos
-- Todas las tablas de dominio incluyen `tenant_id`
-- PK compuesta (`tenant_id`, `id`) para aislamiento
-- Row Level Security (RLS) para reforzar aislamiento
-- Tablas principales: `tenants`, `users`, `tenant_users`, `vehicles`, `interactions`, `transactions`
+## 🚀 Inicio Rápido
 
-## 🚀 Quick Start
-
-### 1. Configuración inicial
+### 1. **Configuración del Entorno**
 ```bash
-# Copiar variables de entorno
-cp .env.example .env
+# Clonar repositorio
+git clone [repository-url]
+cd automarket-multitenant
+
+# Configurar variables de entorno
+cp app/.env.example app/.env
+# Configurar credenciales de Supabase en app/.env
 ```
 
-### 2. Levantar servicios
+### 2. **Configurar Base de Datos**
 ```bash
-docker compose up -d
+# Ejecutar migración corporativa en Supabase SQL Editor
+# Usar: database/migrations/migration_simple.sql (versión limpia y funcional)
+# Ver: database/README.md para más detalles
 ```
 
-### 3. Acceder a Adminer (Cliente de BD)
-- **URL**: http://localhost:8080
-- **Sistema**: PostgreSQL
-- **Servidor**: db
-- **Usuario**: `saas_user`
-- **Contraseña**: `saas_pass`
-- **Base de datos**: `saas`
-
-## 📁 Estructura del Proyecto
-
-```
-├── .github/workflows/ci.yml    # CI: valida init.sql contra Postgres
-├── .gitignore
-├── .env.example
-├── README.md
-├── docker-compose.yml
-├── db/
-│   ├── init.sql               # Esquema + datos de ejemplo (2 tenants)
-│   └── seed/                  # Scripts adicionales
-├── docs/
-│   ├── one-pager.md          # Plantilla one-pager
-│   ├── pitch-outline.md      # Guía pitch (8–12 slides)
-│   ├── architecture-c4.md    # Esqueleto C4 L1–L2
-│   ├── changelog.md          # Cambios por semana
-│   └── weekly-deliverables/   # Entregas por semana
-├── scripts/
-│   ├── psql.sh               # Conectar a la DB
-│   └── verify_tenant.sql     # Consultas de ejemplo
-├── api/                      # Backend API
-└── app/                      # Frontend React
-```
-
-## 🎯 Funcionalidades Implementadas
-
-### ✅ Semana 2 - Modelo de Datos + Tenant
-- [x] 2 tenants con datos de ejemplo (Toyota Centro, Carlos Pérez Motors)
-- [x] Modelo multi-tenant con `tenant_id` en todas las tablas
-- [x] PK compuesta para aislamiento
-- [x] Row Level Security (RLS)
-- [x] 4 tipos de usuarios diferenciados
-- [x] Entidades: vehículos, interacciones, transacciones
-
-### 🔄 Próximas Entregas
-- **S3 (02/10)**: API Base CRUD con scoping por tenant
-- **S4 (09/10)**: Auth + Roles por Tenant
-- **S5 (16/10)**: MVP Navegable
-- **Final (23/10)**: Proyecto completo + demo
-
-## 🛠️ Tecnologías
-
-- **Frontend**: React + Vite + TypeScript
-- **Backend**: Node.js + Express (planificado)
-- **Base de datos**: PostgreSQL 16
-- **Contenedores**: Docker + Docker Compose
-- **Cliente DB**: Adminer
-- **CI/CD**: GitHub Actions
-
-## 🔐 Seguridad
-
-- Aislamiento completo entre tenants via RLS
-- Autenticación JWT (planificado)
-- Roles diferenciados por tipo de usuario
-- Variables de entorno para secretos
-- Validaciones de integridad en BD
-
-## 📊 Datos de Ejemplo
-
-### Tenants
-1. **Toyota Centro** (automotora)
-   - Admin: Roberto García
-   - Vendedores: Ana López, Miguel Torres
-   - 5 vehículos Toyota
-
-2. **Carlos Pérez Motors** (particular)
-   - Vendedor: Carlos Pérez
-   - 2 vehículos (Honda, Volkswagen)
-
-### Compradores
-- María González, Juan Martínez, Luis Ramírez
-- Interacciones activas con vendedores
-
-## 🧪 Testing
-
+### 3. **Iniciar la Aplicación**
 ```bash
-# Conectar a la base de datos
+cd app
+npm install
+npm run dev
+```
+
+### 4. **Acceder a la Aplicación**
+- **Frontend**: http://localhost:5173
+- **Dashboards**: Corporativo, Gerente de Sede, Vendedor
+
+## 📁 **Estructura del Proyecto (Organizada)**
+
+```
+automarket-multitenant/
+├── 📱 app/                           # 🎯 APLICACIÓN PRINCIPAL
+│   ├── src/
+│   │   ├── components/              # React Components
+│   │   │   ├── BranchList.tsx      # Gestión de sedes
+│   │   │   ├── LeadList.tsx        # Sistema de leads
+│   │   │   ├── dashboards/         # Dashboards por rol
+│   │   │   └── ...
+│   │   ├── services/               # Servicios de API
+│   │   │   ├── branchService.ts    # Gestión de sucursales
+│   │   │   ├── leadService.ts      # Sistema de leads
+│   │   │   ├── favoriteService.ts  # Favoritos
+│   │   │   └── messageService.ts   # Mensajería
+│   │   ├── models/                 # Tipos TypeScript
+│   │   ├── lib/                    # Configuración
+│   │   │   └── supabase.ts        # Cliente Supabase
+│   │   └── hooks/                  # React Hooks
+│   ├── package.json
+│   └── .env                        # Variables de entorno
+├── 🗄️ database/                      # BASE DE DATOS
+│   ├── migrations/                 # Scripts de migración
+│   │   ├── migration_simple.sql    # ✅ Migración principal
+│   │   └── migration_corporate_fixed.sql # ✅ Migración completa
+│   ├── schemas/                    # Esquemas base
+│   │   ├── schema.sql             # Esquema inicial
+│   │   └── setup_ultra_safe.sql   # Configuración RLS
+│   └── README.md                   # Documentación BD
+├── ⚙️ config/                        # CONFIGURACIÓN
+│   ├── docker-compose.yml         # Contenedores Docker
+│   └── README.md                   # Guía de configuración
+├── � docs/                          # DOCUMENTACIÓN
+│   ├── setup/                      # Guías de instalación
+│   ├── github/                     # Templates GitHub
+│   ├── manual-tests/               # Pruebas manuales
+│   └── README.md                   # Índice de documentación
+├── 📊 db/init.sql                    # Datos iniciales (Docker)
+├── 🔧 scripts/                       # Scripts de utilidad
+└── 📖 README.md                      # Esta documentación
+```
+
+## 🎯 **Funcionalidades Implementadas**
+
+### ✅ **Sistema Corporativo Multi-Sede**
+- [x] **4 Nuevas Tablas**: branches, leads, favorites, messages
+- [x] **Roles Avanzados**: corporate_admin, branch_manager, sales_person, buyer
+- [x] **Dashboards por Rol**: 3 interfaces especializadas
+- [x] **Gestión de Sucursales**: CRUD completo con estadísticas
+- [x] **Sistema de Leads**: Gestión completa de consultas
+- [x] **Favoritos**: Sistema de marcado de vehículos
+- [x] **Mensajería**: Comunicación integrada
+
+### ✅ **Base Multi-Tenant Segura**
+- [x] **Aislamiento por Tenant**: RLS en todas las tablas
+- [x] **2 Tenants de Ejemplo**: Toyota Centro, Carlos Pérez Motors
+- [x] **PK Compuesta**: tenant_id + id para máxima seguridad
+- [x] **Políticas RLS**: Automáticas y granulares
+- [x] **Supabase**: Base de datos en la nube completamente funcional
+
+## 🛠️ **Stack Tecnológico**
+
+### **Frontend**
+- **React 18** con TypeScript
+- **Vite** para desarrollo y build
+- **CSS Modules** para estilos
+- **Supabase** cliente JavaScript
+
+### **Backend**
+- **Supabase** (PostgreSQL + Auth + API)
+- **Row Level Security (RLS)**
+- **PostgreSQL 16** con extensiones
+
+### **Desarrollo**
+- **Git** control de versiones
+- **npm** gestión de dependencias
+- **Estructura modular** con servicios
+
+## 🔐 **Seguridad y Aislamiento**
+
+### **Multi-Tenant por Diseño**
+- ✅ **Row Level Security (RLS)**: Aislamiento automático por tenant
+- ✅ **Políticas Granulares**: Control de acceso por rol y recurso
+- ✅ **Tenant ID**: Todas las tablas incluyen identificador de organización
+- ✅ **Supabase Auth**: Autenticación y autorización integrada
+
+### **Roles y Permisos**
+```typescript
+type UserRole = 
+  | 'corporate_admin'   // Acceso total a la organización
+  | 'branch_manager'    // Gestión de sucursal específica  
+  | 'sales_person'      // Leads y vehículos asignados
+  | 'buyer'             // Solo lectura y favoritos
+```
+
+## 📊 **Datos de Ejemplo Incluidos**
+
+### **🏢 Sucursales Corporativas**
+- **AutoMarket Las Condes** (Santiago, Metropolitana)
+- **AutoMarket Providencia** (Santiago, Metropolitana)  
+- **AutoMarket Valparaíso** (Valparaíso, Valparaíso)
+
+### **👥 Usuarios por Tenant**
+- **Administradores Corporativos**: Control total
+- **Gerentes de Sede**: Gestión local
+- **Vendedores**: Leads asignados
+- **Compradores**: Navegación y favoritos
+
+## 🧪 **Testing y Verificación**
+
+### **Verificar Base de Datos**
+```bash
+# Conectar a PostgreSQL local
 ./scripts/psql.sh
 
-# Ejecutar consultas de verificación
+# Verificar datos multi-tenant
 \i scripts/verify_tenant.sql
 ```
 
-## 📈 Roadmap
+### **Verificar Migración**
+```sql
+-- Ejecutar en Supabase SQL Editor para verificar
+SELECT tablename, column_count 
+FROM (
+  SELECT tablename, 
+         (SELECT count(*) FROM information_schema.columns 
+          WHERE table_name = t.tablename) as column_count
+  FROM pg_tables t
+  WHERE schemaname = 'public' 
+  AND tablename IN ('branches', 'leads', 'favorites', 'messages')
+) ORDER BY tablename;
+```
 
-- [ ] API REST con endpoints CRUD
-- [ ] Autenticación y autorización
-- [ ] Frontend navegable
-- [ ] Sistema de citas y contactos
-- [ ] Notificaciones por email
-- [ ] Documentación API (OpenAPI)
+## 🚀 **Próximos Pasos**
 
-## 🤝 Contribución
+### **Desarrollo Inmediato**
+- [ ] **Autenticación**: Integrar Supabase Auth con roles
+- [ ] **API Endpoints**: CRUD REST para todas las entidades
+- [ ] **Filtros Avanzados**: Búsqueda y filtrado en dashboards
+- [ ] **Notificaciones**: Sistema de alertas y mensajes
 
-Ver `docs/CONTRIBUTING.md` para guías de contribución.
+### **Funcionalidades Avanzadas**
+- [ ] **Reportes**: Analytics por sede y vendedor
+- [ ] **Sistema de Citas**: Programación de visitas
+- [ ] **Workflow de Leads**: Estados automáticos
+- [ ] **Integración WhatsApp**: Mensajería externa
 
-## 📝 Licencia
+## 📝 **Configuración Recomendada**
 
-Ver archivo `LICENSE` para detalles.
+### **Variables de Entorno (`app/.env`)**
+```bash
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_PROJECT_ID=your_project_id
+```
+
+### **Estructura de Desarrollo**
+```bash
+# Desarrollo local
+npm run dev          # Frontend en localhost:5173
+npm run build        # Build para producción
+npm run preview      # Preview del build
+```
 
 ---
 
-**Estudiante**: EstebanSalgad0  
-**Curso**: Desarrollo de Aplicaciones Web Multi-Tenant  
-**Versión**: v0.2 (Modelo de Datos + Tenant)
+## 📄 **Información del Proyecto**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+**📧 Autor**: EstebanSalgad0  
+**🎓 Contexto**: Desarrollo de Aplicaciones Web Multi-Tenant  
+**📅 Versión**: v2.0 - Sistema Corporativo Multi-Sede  
+**🏗️ Arquitectura**: React + Supabase + PostgreSQL  
+**🔄 Última Actualización**: Octubre 2025
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
+### **🎯 Estado del Proyecto**
+✅ **Base de Datos**: Completamente funcional  
+✅ **Frontend**: Dashboards implementados  
+✅ **Servicios**: CRUD completo para todas las entidades  
+✅ **Migración**: Scripts validados y ejecutados  
+🔄 **Autenticación**: En desarrollo  
+🔄 **API**: Próxima implementación
     extends: [
       // Other configs...
       // Enable lint rules for React

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import type { User, Session } from '@supabase/supabase-js'
+import { supabase, getCurrentTenant } from '../lib/supabase'
 
 interface AuthState {
   user: User | null
@@ -43,21 +43,54 @@ export const useAuth = () => {
   }, [])
 
   // Funciones de autenticación
-  const signUp = async (email: string, password: string, userType: 'buyer' | 'seller' | 'dealer') => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    userType: 'buyer' | 'seller' | 'dealer',
+    profileData?: {
+      firstName?: string
+      lastName?: string
+      phone?: string
+    }
+  ) => {
     try {
+      console.log('🚀 Iniciando registro para:', email, 'Tipo:', userType)
+      
+      // 1. Crear usuario en Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            user_type: userType
+            user_type: userType,
+            first_name: profileData?.firstName,
+            last_name: profileData?.lastName,
+            tenant: getCurrentTenant()
           }
         }
       })
 
-      if (error) throw error
+      if (error) {
+        console.error('❌ Error en signUp:', error)
+        throw error
+      }
+
+      if (data.user) {
+        console.log('✅ Usuario creado en Supabase Auth:')
+        console.log('  - ID:', data.user.id)
+        console.log('  - Email:', data.user.email)
+        console.log('  - Email confirmado:', data.user.email_confirmed_at)
+        console.log('  - Confirmación requerida:', !data.user.email_confirmed_at)
+        console.log('🌍 Tenant actual:', getCurrentTenant())
+        
+        // La creación del perfil multitenant se manejará después de la verificación del email
+        console.log('📧 Se enviará email de verificación a:', email)
+        console.log('ℹ️ El perfil multitenant se creará tras confirmar el email')
+      }
+
       return { data, error: null }
     } catch (error) {
+      console.error('❌ Error completo en signUp:', error)
       return { data: null, error }
     }
   }

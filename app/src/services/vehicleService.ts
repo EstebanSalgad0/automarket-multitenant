@@ -1,11 +1,29 @@
-import { Vehicle, User, ModelFactory } from '../models'
-import type { VehicleData, CreateVehicleData } from '../models/Vehicle'
-import { VehicleStatus } from '../models/BaseModel'
+import { getSupabaseWithTenant } from '../lib/supabase'
+import type { Database } from '../lib/database.types'
 
-// Interfaz para vehículos con detalles extendidos
-export interface VehicleWithDetails {
-  vehicle: Vehicle
-  seller?: User
+type Vehicle = Database['public']['Tables']['vehicles']['Row']
+type VehicleInsert = Database['public']['Tables']['vehicles']['Insert']
+type VehicleUpdate = Database['public']['Tables']['vehicles']['Update']
+
+export interface VehicleWithImages extends Vehicle {
+  vehicle_images: Array<{
+    id: string
+    image_url: string
+    alt_text?: string
+    is_primary: boolean
+    sort_order: number
+  }>
+  seller_profile?: {
+    first_name: string
+    last_name: string
+    rating: number
+    rating_count: number
+  }
+  dealer_profile?: {
+    company_name: string
+    logo_url?: string
+    verified_at?: string
+  }
 }
 
 export interface VehicleFilters {
@@ -24,6 +42,7 @@ export interface VehicleFilters {
 
 export class VehicleService {
   private static instance: VehicleService
+  private supabaseClient = getSupabaseWithTenant()
 
   static getInstance(): VehicleService {
     if (!VehicleService.instance) {
@@ -32,128 +51,84 @@ export class VehicleService {
     return VehicleService.instance
   }
 
-  // Datos mock para desarrollo - después se reemplazará con Supabase
-  private mockVehicles: VehicleData[] = [
-    {
-      id: '1',
-      tenant_id: 'chile',
-      seller_id: 'user1',
-      make: 'Toyota',
-      model: 'Corolla',
-      year: 2020,
-      price: 15000,
-      currency: 'USD',
-      mileage: 25000,
-      fuel_type: 'gasoline',
-      transmission: 'automatic',
-      body_type: 'sedan',
-      color: 'Blanco',
-      description: 'Excelente estado, mantenciones al día',
-      status: VehicleStatus.AVAILABLE,
-      images: [
-        {
-          id: '1',
-          url: 'https://example.com/image1.jpg',
-          alt_text: 'Toyota Corolla frontal',
-          is_primary: true,
-          order: 1
-        }
-      ],
-      features: [
-        { name: 'Aire Acondicionado', category: 'Confort' },
-        { name: 'ABS', category: 'Seguridad' }
-      ],
-      location_city: 'Santiago',
-      location_state: 'RM'
-    },
-    {
-      id: '2',
-      tenant_id: 'chile',
-      seller_id: 'user2',
-      make: 'Honda',
-      model: 'Civic',
-      year: 2019,
-      price: 18000,
-      currency: 'USD',
-      mileage: 30000,
-      fuel_type: 'gasoline',
-      transmission: 'manual',
-      body_type: 'sedan',
-      color: 'Azul',
-      description: 'Motor 1.5L turbo, muy económico',
-      status: VehicleStatus.AVAILABLE,
-      images: [
-        {
-          id: '2',
-          url: 'https://example.com/image2.jpg',
-          alt_text: 'Honda Civic lateral',
-          is_primary: true,
-          order: 1
-        }
-      ],
-      features: [
-        { name: 'Turbo', category: 'Motor' },
-        { name: 'Pantalla Touch', category: 'Tecnología' }
-      ],
-      location_city: 'Valparaíso',
-      location_state: 'V'
-    }
-  ]
-
   // Obtener vehículos con filtros
   async getVehicles(filters: VehicleFilters = {}, limit = 20, offset = 0): Promise<{
-    vehicles: VehicleWithDetails[]
+    vehicles: VehicleWithImages[]
     count: number
     error: Error | null
   }> {
     try {
-      let filteredVehicles = this.mockVehicles
+      let query = this.supabaseClient.supabase
+        .from('vehicles')
+        .select(`
+          *,
+          vehicle_images (
+            id,
+            image_url,
+            alt_text,
+            is_primary,
+            sort_order
+          ),
+          seller:users!seller_id (
+            user_profiles (
+              first_name,
+              last_name,
+              rating,
+              rating_count
+            ),
+            dealer_profiles (
+              company_name,
+              logo_url,
+              verified_at
+            )
+          )
+        `, { count: 'exact', head: false })
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      // Aplicar filtro de tenant
+      query = this.supabaseClient.withTenant(query)
 
       // Aplicar filtros
       if (filters.brand) {
-        filteredVehicles = filteredVehicles.filter(v => 
-          v.make.toLowerCase().includes(filters.brand!.toLowerCase())
-        )
+        query = query.ilike('brand', `%${filters.brand}%`)
       }
       if (filters.model) {
-        filteredVehicles = filteredVehicles.filter(v => 
-          v.model.toLowerCase().includes(filters.model!.toLowerCase())
-        )
+        query = query.ilike('model', `%${filters.model}%`)
       }
       if (filters.yearMin) {
-        filteredVehicles = filteredVehicles.filter(v => v.year >= filters.yearMin!)
+        query = query.gte('year', filters.yearMin)
       }
       if (filters.yearMax) {
-        filteredVehicles = filteredVehicles.filter(v => v.year <= filters.yearMax!)
+        query = query.lte('year', filters.yearMax)
       }
       if (filters.priceMin) {
-        filteredVehicles = filteredVehicles.filter(v => v.price >= filters.priceMin!)
+        query = query.gte('price', filters.priceMin)
       }
       if (filters.priceMax) {
-        filteredVehicles = filteredVehicles.filter(v => v.price <= filters.priceMax!)
+        query = query.lte('price', filters.priceMax)
       }
       if (filters.bodyType) {
-        filteredVehicles = filteredVehicles.filter(v => v.body_type === filters.bodyType)
+        query = query.eq('body_type', filters.bodyType)
       }
       if (filters.fuelType) {
-        filteredVehicles = filteredVehicles.filter(v => v.fuel_type === filters.fuelType)
+        query = query.eq('fuel_type', filters.fuelType)
       }
       if (filters.transmission) {
-        filteredVehicles = filteredVehicles.filter(v => v.transmission === filters.transmission)
+        query = query.eq('transmission', filters.transmission)
+      }
+      if (filters.condition) {
+        query = query.eq('condition_type', filters.condition)
       }
 
-      // Paginación
-      const paginatedVehicles = filteredVehicles.slice(offset, offset + limit)
+      const { data, error, count } = await query
 
-      // Convertir a nuestros modelos
-      const vehiclesWithDetails: VehicleWithDetails[] = paginatedVehicles.map(vehicleData => {
-        const vehicle = ModelFactory.createVehicle(vehicleData)
-        return { vehicle }
-      })
+      if (error) throw error
 
       return {
-        vehicles: vehiclesWithDetails,
-        count: filteredVehicles.length,
+        vehicles: data as VehicleWithImages[],
+        count: count || 0,
         error: null
       }
     } catch (error) {
@@ -167,21 +142,50 @@ export class VehicleService {
 
   // Obtener vehículo por ID
   async getVehicleById(id: string): Promise<{
-    vehicle: VehicleWithDetails | null
+    vehicle: VehicleWithImages | null
     error: Error | null
   }> {
     try {
-      const vehicleData = this.mockVehicles.find(v => v.id === id)
-      
-      if (!vehicleData) {
-        return { vehicle: null, error: new Error('Vehículo no encontrado') }
-      }
+      let query = this.supabaseClient.supabase
+        .from('vehicles')
+        .select(`
+          *,
+          vehicle_images (
+            id,
+            image_url,
+            alt_text,
+            is_primary,
+            sort_order
+          ),
+          seller:users!seller_id (
+            user_profiles (
+              first_name,
+              last_name,
+              rating,
+              rating_count
+            ),
+            dealer_profiles (
+              company_name,
+              logo_url,
+              verified_at
+            )
+          )
+        `)
+        .eq('id', id)
+        .single()
 
-      const vehicle = ModelFactory.createVehicle(vehicleData)
-      const vehicleWithDetails: VehicleWithDetails = { vehicle }
+      // Aplicar filtro de tenant
+      query = this.supabaseClient.withTenant(query)
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      // Incrementar contador de vistas
+      await this.incrementViews(id)
 
       return {
-        vehicle: vehicleWithDetails,
+        vehicle: data as VehicleWithImages,
         error: null
       }
     } catch (error) {
@@ -193,28 +197,25 @@ export class VehicleService {
   }
 
   // Crear nuevo vehículo
-  async createVehicle(vehicleData: CreateVehicleData): Promise<{
+  async createVehicle(vehicleData: Omit<VehicleInsert, 'tenant_id' | 'seller_id'>): Promise<{
     vehicle: Vehicle | null
     error: Error | null
   }> {
     try {
-      const newVehicleData: VehicleData = {
-        ...vehicleData,
-        id: `vehicle_${Date.now()}`,
-        status: VehicleStatus.AVAILABLE,
-        images: [],
-        features: [],
-        created_at: new Date(),
-        updated_at: new Date()
-      }
+      const { data, error } = await this.supabaseClient.supabase
+        .from('vehicles')
+        .insert({
+          ...vehicleData,
+          tenant_id: this.supabaseClient.tenant,
+          seller_id: (await this.supabaseClient.supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single()
 
-      // Agregar a mock data
-      this.mockVehicles.push(newVehicleData)
-
-      const vehicle = ModelFactory.createVehicle(newVehicleData)
+      if (error) throw error
 
       return {
-        vehicle,
+        vehicle: data,
         error: null
       }
     } catch (error) {
@@ -226,28 +227,24 @@ export class VehicleService {
   }
 
   // Actualizar vehículo
-  async updateVehicle(id: string, updates: Partial<VehicleData>): Promise<{
+  async updateVehicle(id: string, updates: VehicleUpdate): Promise<{
     vehicle: Vehicle | null
     error: Error | null
   }> {
     try {
-      const vehicleIndex = this.mockVehicles.findIndex(v => v.id === id)
-      
-      if (vehicleIndex === -1) {
-        return { vehicle: null, error: new Error('Vehículo no encontrado') }
-      }
+      const tenantScopedUpdate = this.supabaseClient.withTenant(
+        this.supabaseClient.supabase.from('vehicles').update(updates)
+      )
 
-      // Actualizar datos
-      this.mockVehicles[vehicleIndex] = {
-        ...this.mockVehicles[vehicleIndex],
-        ...updates,
-        updated_at: new Date()
-      }
+      const { data, error } = await tenantScopedUpdate
+        .eq('id', id)
+        .select()
+        .single()
 
-      const vehicle = ModelFactory.createVehicle(this.mockVehicles[vehicleIndex])
+      if (error) throw error
 
       return {
-        vehicle,
+        vehicle: data,
         error: null
       }
     } catch (error) {
@@ -261,14 +258,14 @@ export class VehicleService {
   // Eliminar vehículo (cambiar estado a suspended)
   async deleteVehicle(id: string): Promise<{ error: Error | null }> {
     try {
-      const vehicleIndex = this.mockVehicles.findIndex(v => v.id === id)
-      
-      if (vehicleIndex === -1) {
-        return { error: new Error('Vehículo no encontrado') }
-      }
+      const tenantScopedDeletion = this.supabaseClient.withTenant(
+        this.supabaseClient.supabase.from('vehicles').update({ status: 'suspended' })
+      )
 
-      this.mockVehicles[vehicleIndex].status = VehicleStatus.PENDING
-      this.mockVehicles[vehicleIndex].updated_at = new Date()
+      const { error } = await tenantScopedDeletion
+        .eq('id', id)
+
+      if (error) throw error
 
       return { error: null }
     } catch (error) {
@@ -276,25 +273,114 @@ export class VehicleService {
     }
   }
 
-  // Obtener favoritos del usuario (mock)
-  async getUserFavorites(): Promise<{
-    vehicles: VehicleWithDetails[]
+  // Incrementar vistas
+  private async incrementViews(vehicleId: string): Promise<void> {
+    await this.supabaseClient.supabase.rpc('increment', {
+      table_name: 'vehicles',
+      row_id: vehicleId,
+      column_name: 'views_count'
+    })
+  }
+
+  // Gestión de favoritos
+  async toggleFavorite(vehicleId: string): Promise<{
+    isFavorite: boolean
     error: Error | null
   }> {
     try {
-      // Mock: devolver el primer vehículo como favorito
-      const favoriteVehicle = this.mockVehicles[0]
-      if (favoriteVehicle) {
-        const vehicle = ModelFactory.createVehicle(favoriteVehicle)
-        const vehicleWithDetails: VehicleWithDetails = { vehicle }
-        return {
-          vehicles: [vehicleWithDetails],
-          error: null
-        }
+      const user = (await this.supabaseClient.supabase.auth.getUser()).data.user
+      if (!user) throw new Error('Usuario no autenticado')
+
+      // Verificar si ya está en favoritos
+      const { data: existing } = await this.supabaseClient.supabase
+        .from('user_favorites')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('vehicle_id', vehicleId)
+        .single()
+
+      if (existing) {
+        // Remover de favoritos
+        const { error } = await this.supabaseClient.supabase
+          .from('user_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('vehicle_id', vehicleId)
+
+        if (error) throw error
+
+        const { error: rpcError } = await this.supabaseClient.supabase.rpc(
+          'adjust_vehicle_favorites',
+          {
+            vehicle_id: vehicleId,
+            delta: -1,
+          }
+        )
+
+        if (rpcError) throw rpcError
+
+        return { isFavorite: false, error: null }
+      } else {
+        // Añadir a favoritos
+        const { error } = await this.supabaseClient.supabase
+          .from('user_favorites')
+          .insert({
+            user_id: user.id,
+            vehicle_id: vehicleId
+          })
+
+        if (error) throw error
+
+        const { error: rpcError } = await this.supabaseClient.supabase.rpc(
+          'adjust_vehicle_favorites',
+          {
+            vehicle_id: vehicleId,
+            delta: 1,
+          }
+        )
+
+        if (rpcError) throw rpcError
+
+        return { isFavorite: true, error: null }
       }
+    } catch (error) {
+      return { isFavorite: false, error: error as Error }
+    }
+  }
+
+  // Obtener favoritos del usuario
+  async getUserFavorites(): Promise<{
+    vehicles: VehicleWithImages[]
+    error: Error | null
+  }> {
+    try {
+      const user = (await this.supabaseClient.supabase.auth.getUser()).data.user
+      if (!user) throw new Error('Usuario no autenticado')
+
+      const { data, error } = await this.supabaseClient.supabase
+        .from('user_favorites')
+        .select(`
+          vehicle_id,
+          vehicles (
+            *,
+            vehicle_images (
+              id,
+              image_url,
+              alt_text,
+              is_primary,
+              sort_order
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const vehicles = data?.map((item: any) => item.vehicles).filter(Boolean) as VehicleWithImages[]
 
       return {
-        vehicles: [],
+        vehicles,
         error: null
       }
     } catch (error) {
@@ -304,20 +390,8 @@ export class VehicleService {
       }
     }
   }
-
-  // Toggle favorito (mock)
-  async toggleFavorite(_vehicleId: string): Promise<{
-    isFavorite: boolean
-    error: Error | null
-  }> {
-    try {
-      // Mock: siempre devuelve true
-      return { isFavorite: true, error: null }
-    } catch (error) {
-      return { isFavorite: false, error: error as Error }
-    }
-  }
 }
 
 // Export singleton instance
 export const vehicleService = VehicleService.getInstance()
+

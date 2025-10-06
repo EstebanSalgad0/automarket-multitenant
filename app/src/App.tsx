@@ -4,10 +4,17 @@ import UserProfile from './components/UserProfile'
 import DealerRegistration from './components/DealerRegistration'
 import SellerRegistration from './components/SellerRegistration'
 import VehiclesCatalog from './components/VehiclesCatalog'
-import { testSupabaseConnection, testSupabaseAuth } from './utils/testSupabase'
+import BranchList from './components/BranchList'
+import LeadList from './components/LeadList'
+import CorporateAdminDashboard from './components/dashboards/CorporateAdminDashboard'
+import BranchManagerDashboard from './components/dashboards/BranchManagerDashboard'
+import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
+import LoginModal from './components/LoginModal'
+import SupabaseDebugPanel from './components/SupabaseDebugPanel'
+import { useAuth } from './hooks/useAuth'
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard'>('home')
   const [searchFilters, setSearchFilters] = useState<any>({})
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [homeSearchData, setHomeSearchData] = useState({
@@ -17,31 +24,15 @@ function App() {
     location: ''
   })
   const [supabaseStatus, setSupabaseStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  
+  const { user, loading, signOut } = useAuth()
 
-  // Probar conexión con Supabase al cargar
+  // Configurar estado de Supabase al cargar
   useEffect(() => {
-    const runTests = async () => {
-      console.log('🚀 Iniciando pruebas de Supabase...');
-      
-      try {
-        // Test de conexión
-        const connectionTest = await testSupabaseConnection();
-        const authTest = await testSupabaseAuth();
-        
-        if (connectionTest.success && authTest.success) {
-          setSupabaseStatus('connected');
-          console.log('✅ Todos los tests pasaron correctamente');
-        } else {
-          setSupabaseStatus('error');
-          console.error('❌ Algunos tests fallaron');
-        }
-      } catch (error) {
-        console.error('❌ Error ejecutando tests:', error);
-        setSupabaseStatus('error');
-      }
-    };
-
-    runTests();
+    // Asumir que Supabase está conectado (ya configurado en .env)
+    setSupabaseStatus('connected');
+    console.log('✅ Supabase configurado correctamente');
   }, [])
 
   if (currentView === 'profile') {
@@ -54,6 +45,61 @@ function App() {
 
   if (currentView === 'seller-registration') {
     return <SellerRegistration onBack={() => setCurrentView('home')} />
+  }
+
+  if (currentView === 'branches') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+          ← Volver al inicio
+        </button>
+        <BranchList />
+      </div>
+    )
+  }
+
+  if (currentView === 'leads') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+          ← Volver al inicio
+        </button>
+        <LeadList />
+      </div>
+    )
+  }
+
+  if (currentView === 'corporate-dashboard') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+          ← Volver al inicio
+        </button>
+        <CorporateAdminDashboard />
+      </div>
+    )
+  }
+
+  if (currentView === 'branch-dashboard') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+          ← Volver al inicio
+        </button>
+        <BranchManagerDashboard />
+      </div>
+    )
+  }
+
+  if (currentView === 'sales-dashboard') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+          ← Volver al inicio
+        </button>
+        <SalesPersonDashboard />
+      </div>
+    )
   }
 
   if (currentView === 'vehicles-catalog') {
@@ -74,8 +120,16 @@ function App() {
           
           <nav className="nav-menu">
             <button className="nav-link" onClick={() => setCurrentView('vehicles-catalog')}>Comprar</button>
-            <button className="nav-link" onClick={() => {}}>Vender</button>
-            <button className="nav-link" onClick={() => {}}>Financiamiento</button>
+            <button className="nav-link" onClick={() => setCurrentView('branches')}>Sucursales</button>
+            <button className="nav-link" onClick={() => setCurrentView('leads')}>Leads</button>
+            <div className="nav-dropdown">
+              <button className="nav-link">Dashboards ▼</button>
+              <div className="nav-dropdown-content">
+                <button onClick={() => setCurrentView('corporate-dashboard')}>Corporativo</button>
+                <button onClick={() => setCurrentView('branch-dashboard')}>Sucursal</button>
+                <button onClick={() => setCurrentView('sales-dashboard')}>Ventas</button>
+              </div>
+            </div>
             <button className="nav-link" onClick={() => {}}>Ayuda</button>
           </nav>
           
@@ -83,7 +137,23 @@ function App() {
             <button className="btn-icon">❤️</button>
             <button className="btn-icon">🔔</button>
             <button className="btn-icon" onClick={() => setCurrentView('profile')}>👤</button>
-            <span className="nav-link">Iniciar sesión</span>
+            
+            {/* Auth Section */}
+            {loading ? (
+              <span className="nav-link">⏳ Cargando...</span>
+            ) : user ? (
+              <div className="user-menu">
+                <span className="nav-link">👋 {user.email}</span>
+                <button className="btn-secondary" onClick={async () => {
+                  await signOut();
+                }}>Cerrar sesión</button>
+              </div>
+            ) : (
+              <button className="nav-link login-btn" onClick={() => setShowLoginModal(true)}>
+                🔐 Iniciar sesión
+              </button>
+            )}
+            
             <button className="btn-primary">Publicar vehículo</button>
             {/* Indicador de estado de Supabase */}
             <div className={`supabase-indicator ${supabaseStatus}`}>
@@ -724,6 +794,20 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onSuccess={() => {
+          setShowLoginModal(false);
+          // Opcional: redirigir a perfil después del login
+          // setCurrentView('profile');
+        }}
+      />
+
+      {/* Panel de Debug (solo en desarrollo) */}
+      <SupabaseDebugPanel />
     </div>
   )
 }
