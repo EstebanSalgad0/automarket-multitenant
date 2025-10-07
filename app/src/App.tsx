@@ -11,7 +11,9 @@ import BranchManagerDashboard from './components/dashboards/BranchManagerDashboa
 import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
 import LoginModal from './components/LoginModal'
 import SupabaseDebugPanel from './components/SupabaseDebugPanel'
+import UserDebugPanel from './components/UserDebugPanel'
 import { useAuth } from './hooks/useAuth'
+import { useUserRole, getRoleName, getRoleIcon, getRoleColor } from './hooks/useUserRole'
 
 function App() {
   const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard'>('home')
@@ -23,15 +25,14 @@ function App() {
     maxPrice: '',
     location: ''
   })
-  const [supabaseStatus, setSupabaseStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
   const [showLoginModal, setShowLoginModal] = useState(false)
   
   const { user, loading, signOut } = useAuth()
+  const { role, fullName, loading: roleLoading } = useUserRole()
 
   // Configurar estado de Supabase al cargar
   useEffect(() => {
     // Asumir que Supabase está conectado (ya configurado en .env)
-    setSupabaseStatus('connected');
     console.log('✅ Supabase configurado correctamente');
   }, [])
 
@@ -134,33 +135,79 @@ function App() {
           </nav>
           
           <div className="nav-actions">
-            <button className="btn-icon">❤️</button>
-            <button className="btn-icon">🔔</button>
-            <button className="btn-icon" onClick={() => setCurrentView('profile')}>👤</button>
+            <button className="btn-icon" title="Favoritos">
+              <span className="icon-wrapper">❤️</span>
+            </button>
+            <button className="btn-icon" title="Notificaciones">
+              <span className="icon-wrapper">🔔</span>
+              <span className="notification-badge">3</span>
+            </button>
             
             {/* Auth Section */}
-            {loading ? (
-              <span className="nav-link">⏳ Cargando...</span>
-            ) : user ? (
-              <div className="user-menu">
-                <span className="nav-link">👋 {user.email}</span>
-                <button className="btn-secondary" onClick={async () => {
-                  await signOut();
-                }}>Cerrar sesión</button>
+            {loading || roleLoading ? (
+              <div className="loading-indicator">
+                <span className="spinner">⏳</span>
+                <span>Cargando...</span>
               </div>
+            ) : user ? (
+              <>
+                <button className="btn-primary-publish" title="Publicar vehículo">
+                  <span className="publish-icon">📝</span>
+                  <span className="publish-text">PUBLICAR VEHÍCULO</span>
+                </button>
+                
+                <div className="user-menu-wrapper">
+                  <button className="user-menu-trigger">
+                    <div className="user-avatar">
+                      <span className="avatar-icon">{getRoleIcon(role)}</span>
+                      <span className="avatar-text">{fullName?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</span>
+                    </div>
+                    <div className="user-info">
+                      <span className="user-email">{fullName || user.email}</span>
+                      <span className="user-role" style={{ color: getRoleColor(role) }}>
+                        {getRoleName(role)}
+                      </span>
+                    </div>
+                    <span className="dropdown-arrow">▼</span>
+                  </button>
+                  <div className="user-dropdown">
+                    <div className="dropdown-header">
+                      <div className="dropdown-user-info">
+                        <strong>{fullName || user.email}</strong>
+                        <span className="dropdown-role">{getRoleName(role)}</span>
+                      </div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item" onClick={() => setCurrentView('profile')}>
+                      <span className="dropdown-icon">👤</span>
+                      <span>Mi Perfil</span>
+                    </button>
+                    <button className="dropdown-item">
+                      <span className="dropdown-icon">⚙️</span>
+                      <span>Configuración</span>
+                    </button>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item logout-item" onClick={async () => {
+                      await signOut();
+                    }}>
+                      <span className="dropdown-icon">🚪</span>
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
+                </div>
+              </>
             ) : (
-              <button className="nav-link login-btn" onClick={() => setShowLoginModal(true)}>
-                🔐 Iniciar sesión
-              </button>
+              <>
+                <button className="btn-primary-publish" title="Publicar vehículo">
+                  <span className="publish-icon">📝</span>
+                  <span className="publish-text">PUBLICAR VEHÍCULO</span>
+                </button>
+                <button className="btn-login" onClick={() => setShowLoginModal(true)}>
+                  <span className="login-icon">🔐</span>
+                  <span>Iniciar sesión</span>
+                </button>
+              </>
             )}
-            
-            <button className="btn-primary">Publicar vehículo</button>
-            {/* Indicador de estado de Supabase */}
-            <div className={`supabase-indicator ${supabaseStatus}`}>
-              {supabaseStatus === 'connecting' && '🔄'}
-              {supabaseStatus === 'connected' && '✅'}
-              {supabaseStatus === 'error' && '❌'}
-            </div>
           </div>
         </div>
       </header>
@@ -808,6 +855,9 @@ function App() {
 
       {/* Panel de Debug (solo en desarrollo) */}
       <SupabaseDebugPanel />
+      
+      {/* Panel de Debug de Usuario */}
+      {user && <UserDebugPanel />}
     </div>
   )
 }

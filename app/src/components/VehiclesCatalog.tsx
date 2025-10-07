@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './VehiclesCatalog.css';
+import { vehicleService } from '../services/vehicleService';
 
 interface Vehicle {
   id: number;
@@ -46,106 +47,53 @@ const VehiclesCatalog: React.FC<VehiclesCatalogProps> = ({ onBack, initialFilter
 
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Estados para manejo de datos reales
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - en producción vendría de una API
-  const mockVehicles: Vehicle[] = [
-    {
-      id: 1,
-      title: 'Toyota Corolla GLi 1.8',
-      price: '$18.500.000',
-      year: 2022,
-      mileage: '15.000 km',
-      transmission: 'Automática',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'dealer',
-      sellerName: 'Toyota Centro',
-      location: 'Santiago Centro',
-      brand: 'Toyota',
-      model: 'Corolla',
-      type: 'Sedán'
-    },
-    {
-      id: 2,
-      title: 'Honda Civic Sport 2.0',
-      price: '$22.900.000',
-      year: 2023,
-      mileage: '8.500 km',
-      transmission: 'Manual',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'dealer',
-      sellerName: 'Honda Premium',
-      location: 'Las Condes',
-      brand: 'Honda',
-      model: 'Civic',
-      type: 'Sedán'
-    },
-    {
-      id: 3,
-      title: 'Mazda CX-5 AWD',
-      price: '$28.750.000',
-      year: 2023,
-      mileage: '12.000 km',
-      transmission: 'Automática',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'individual',
-      sellerName: 'Carlos González',
-      location: 'Providencia',
-      brand: 'Mazda',
-      model: 'CX-5',
-      type: 'SUV'
-    },
-    {
-      id: 4,
-      title: 'Nissan Sentra Advance',
-      price: '$16.200.000',
-      year: 2021,
-      mileage: '32.000 km',
-      transmission: 'Automática',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'individual',
-      sellerName: 'María Fernández',
-      location: 'Ñuñoa',
-      brand: 'Nissan',
-      model: 'Sentra',
-      type: 'Sedán'
-    },
-    {
-      id: 5,
-      title: 'Hyundai Tucson 4WD',
-      price: '$24.500.000',
-      year: 2022,
-      mileage: '18.500 km',
-      transmission: 'Automática',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'dealer',
-      sellerName: 'Hyundai Motors',
-      location: 'Maipú',
-      brand: 'Hyundai',
-      model: 'Tucson',
-      type: 'SUV'
-    },
-    {
-      id: 6,
-      title: 'Chevrolet Tracker LTZ',
-      price: '$19.800.000',
-      year: 2022,
-      mileage: '25.000 km',
-      transmission: 'Automática',
-      fuel: 'Gasolina',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
-      sellerType: 'individual',
-      sellerName: 'Roberto Silva',
-      location: 'San Miguel',
-      brand: 'Chevrolet',
-      model: 'Tracker',
-      type: 'SUV'
+  // Cargar vehículos desde la base de datos
+  useEffect(() => {
+    loadVehicles();
+  }, []);
+
+  const loadVehicles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await vehicleService.getVehicles();
+      
+      // Transformar datos de Supabase al formato del componente
+      const transformedVehicles: Vehicle[] = result.vehicles.map((v: any, index: number) => ({
+        id: index + 1, // Usar índice como ID temporal (el UUID no se puede convertir a número)
+        title: `${v.make} ${v.model}`,
+        price: `$${(v.price / 1).toLocaleString('es-CL')}`,
+        year: v.year,
+        mileage: `${(v.mileage || 0).toLocaleString('es-CL')} km`,
+        transmission: v.transmission === 'automatic' ? 'Automática' : 'Manual',
+        fuel: v.fuel_type === 'gasoline' ? 'Gasolina' : v.fuel_type === 'diesel' ? 'Diésel' : v.fuel_type === 'electric' ? 'Eléctrico' : 'Híbrido',
+        images: v.vehicle_images?.length > 0 
+          ? v.vehicle_images.map((img: any) => img.image_url) 
+          : [`https://placehold.co/800x600/4299E1/ffffff?text=${encodeURIComponent(v.make + ' ' + v.model)}`],
+        sellerType: 'dealer',
+        sellerName: v.tenants?.name || 'AutoMarket',
+        location: v.branches?.city || 'Chile',
+        brand: v.make,
+        model: v.model,
+        type: v.body_type === 'sedan' ? 'Sedán' : v.body_type === 'suv' ? 'SUV' : v.body_type === 'hatchback' ? 'Hatchback' : v.body_type === 'pickup' ? 'Pickup' : 'Otro'
+      }));
+      
+      setVehicles(transformedVehicles);
+    } catch (err) {
+      console.error('Error loading vehicles:', err);
+      setError('Error al cargar vehículos. Por favor intenta nuevamente.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Mock data - REMOVIDO, ahora usamos datos reales
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -169,7 +117,7 @@ const VehiclesCatalog: React.FC<VehiclesCatalogProps> = ({ onBack, initialFilter
   };
 
   // Filtrar vehículos basado en los filtros aplicados
-  const filteredVehicles = mockVehicles.filter(vehicle => {
+  const filteredVehicles = vehicles.filter(vehicle => {
     return (
       (!filters.type || vehicle.type === filters.type) &&
       (!filters.brand || vehicle.brand === filters.brand) &&
@@ -197,6 +145,51 @@ const VehiclesCatalog: React.FC<VehiclesCatalogProps> = ({ onBack, initialFilter
         return 0;
     }
   });
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <div className="vehicles-catalog">
+        <div className="loading-container" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <div className="spinner" style={{ 
+            border: '4px solid #f3f3f3', 
+            borderTop: '4px solid #007bff', 
+            borderRadius: '50%', 
+            width: '50px', 
+            height: '50px', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 20px'
+          }}></div>
+          <p style={{ fontSize: '18px', color: '#666' }}>Cargando vehículos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error
+  if (error) {
+    return (
+      <div className="vehicles-catalog">
+        <div className="error-container" style={{ textAlign: 'center', padding: '60px 20px' }}>
+          <p style={{ fontSize: '18px', color: '#d32f2f', marginBottom: '20px' }}>{error}</p>
+          <button 
+            onClick={loadVehicles}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="vehicles-catalog">
