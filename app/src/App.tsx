@@ -6,7 +6,7 @@ import SellerRegistration from './components/SellerRegistration'
 import VehiclesCatalog from './components/VehiclesCatalog'
 import BranchList from './components/BranchList'
 import LeadList from './components/LeadList'
-import CorporateAdminDashboard from './components/dashboards/CorporateAdminDashboard'
+import CorporateAdminDashboardReal from './components/dashboards/CorporateAdminDashboardReal'
 import BranchManagerDashboard from './components/dashboards/BranchManagerDashboard'
 import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
 import LoginModal from './components/LoginModal'
@@ -15,9 +15,21 @@ import UserDebugPanel from './components/UserDebugPanel'
 import { useAuth } from './hooks/useAuth'
 import { useUserRole, getRoleName, getRoleIcon, getRoleColor } from './hooks/useUserRole'
 
+interface SearchFilters {
+  type: string
+  brand: string
+  maxPrice: string
+  location: string
+}
+
 function App() {
   const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard'>('home')
-  const [searchFilters, setSearchFilters] = useState<any>({})
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    type: '',
+    brand: '',
+    maxPrice: '',
+    location: ''
+  })
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [homeSearchData, setHomeSearchData] = useState({
     type: '',
@@ -73,10 +85,27 @@ function App() {
   if (currentView === 'corporate-dashboard') {
     return (
       <div>
-        <button onClick={() => setCurrentView('home')} style={{ margin: '20px' }}>
+        <button 
+          onClick={() => setCurrentView('home')} 
+          style={{ 
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            zIndex: 1000,
+            background: 'white',
+            border: '2px solid #667eea',
+            color: '#667eea',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}
+        >
           ← Volver al inicio
         </button>
-        <CorporateAdminDashboard />
+        <CorporateAdminDashboardReal />
       </div>
     )
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentTenant } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
 interface User {
@@ -13,6 +13,7 @@ interface User {
 export default function SupabaseDebugPanel() {
   const [authUsers, setAuthUsers] = useState<User[]>([])
   const [tenants, setTenants] = useState<any[]>([])
+  const [currentTenant, setCurrentTenant] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isMinimized, setIsMinimized] = useState(true)
   const { user } = useAuth()
@@ -25,16 +26,24 @@ export default function SupabaseDebugPanel() {
     try {
       console.log('🔍 Verificando datos en Supabase...')
       
-      // Verificar tenants
-      const { data: tenantsData, error: tenantsError } = await supabase
+      const tenantSlug = getCurrentTenant()
+      console.log('🏢 Tenant actual:', tenantSlug)
+      
+      // Obtener solo el tenant actual
+      const { data: currentTenantData, error: currentTenantError } = await supabase
         .from('tenants')
         .select('*')
+        .eq('slug', tenantSlug)
+        .maybeSingle()
       
-      if (tenantsError) {
-        console.error('Error obteniendo tenants:', tenantsError)
+      if (currentTenantError) {
+        console.error('Error obteniendo tenant actual:', currentTenantError)
+      } else if (currentTenantData) {
+        console.log('✅ Tenant actual encontrado:', currentTenantData)
+        setCurrentTenant(currentTenantData)
+        setTenants([currentTenantData])
       } else {
-        console.log('✅ Tenants encontrados:', tenantsData)
-        setTenants(tenantsData || [])
+        console.warn('⚠️ No se encontró tenant con slug:', tenantSlug)
       }
 
       // Intentar obtener datos del usuario actual si está logueado
