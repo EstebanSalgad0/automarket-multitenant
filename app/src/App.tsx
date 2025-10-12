@@ -12,6 +12,7 @@ import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
 import LoginModal from './components/LoginModal'
 import SupabaseDebugPanel from './components/SupabaseDebugPanel'
 import UserDebugPanel from './components/UserDebugPanel'
+import AutoMarketIcon from './components/AutoMarketIcon'
 import { useAuth } from './hooks/useAuth'
 import { useUserRole, getRoleName, getRoleIcon, getRoleColor } from './hooks/useUserRole'
 
@@ -143,7 +144,7 @@ function App() {
         <div className="container">
           <div className="nav-brand">
             <div className="logo">
-              <span className="logo-icon">🚗</span>
+              <AutoMarketIcon size={32} className="logo-icon-svg" />
               <span className="logo-text">AutoMarket</span>
             </div>
           </div>
@@ -824,7 +825,7 @@ function App() {
           <div className="footer-content">
             <div className="footer-brand">
               <div className="logo">
-                <span className="logo-icon">🚗</span>
+                <AutoMarketIcon size={32} className="logo-icon-svg" />
                 <span className="logo-text">AutoMarket</span>
               </div>
               <p>La plataforma líder en venta de vehículos que conecta compradores con concesionarios y particulares verificados en todo el país.</p>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DealerDashboard from './DealerDashboard';
 import SellerDashboard from './SellerDashboard';
+import { dashboardService, getCurrentUserInfo, type BranchMetrics } from '../../services/dashboardService';
 
 interface RegionalStats {
   totalDealers: number;
@@ -35,6 +36,7 @@ function SimpleRegionalAdminDashboard() {
   const [stats, setStats] = useState<RegionalStats | null>(null);
   const [dealers, setDealers] = useState<DealerData[]>([]);
   const [sellers, setSellers] = useState<SellerData[]>([]);
+  const [branchMetrics, setBranchMetrics] = useState<BranchMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'dealers' | 'sellers' | 'dealer-view' | 'seller-view'>('overview');
 
@@ -45,99 +47,59 @@ function SimpleRegionalAdminDashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     
-    const mockStats: RegionalStats = {
-      totalDealers: 8,
-      totalVehicles: 680,
-      totalSellers: 45,
-      monthlyRevenue: 3200000000, // $3.2B CLP
-      activeSellers: 42,
-      totalSales: 125
-    };
-
-    const mockDealers: DealerData[] = [
-      {
-        id: '1',
-        name: 'AutoMarket Santiago Norte',
-        city: 'Santiago',
-        vehicles: 120,
-        sellers: 8,
-        revenue: 850000000,
-        status: 'active'
-      },
-      {
-        id: '2',
-        name: 'AutoMarket Las Condes',
-        city: 'Las Condes',
-        vehicles: 95,
-        sellers: 6,
-        revenue: 720000000,
-        status: 'active'
-      },
-      {
-        id: '3',
-        name: 'AutoMarket Maipú',
-        city: 'Maipú',
-        vehicles: 85,
-        sellers: 5,
-        revenue: 580000000,
-        status: 'active'
-      },
-      {
-        id: '4',
-        name: 'AutoMarket Puente Alto',
-        city: 'Puente Alto',
-        vehicles: 75,
-        sellers: 4,
-        revenue: 450000000,
-        status: 'active'
+    try {
+      // Obtener información del usuario actual (gerente de sucursal)
+      const userInfo = await getCurrentUserInfo();
+      
+      if (!userInfo?.branch_id) {
+        console.error('User does not have branch_id');
+        return;
       }
-    ];
 
-    const mockSellers: SellerData[] = [
-      {
-        id: '1',
-        name: 'Carlos Mendoza',
-        email: 'carlos.mendoza@automarket.com',
-        dealer: 'AutoMarket Santiago Norte',
-        vehicles: 15,
-        sales: 8,
-        status: 'active'
-      },
-      {
-        id: '2',
-        name: 'Ana García',
-        email: 'ana.garcia@automarket.com',
-        dealer: 'AutoMarket Las Condes',
-        vehicles: 12,
-        sales: 6,
-        status: 'active'
-      },
-      {
-        id: '3',
-        name: 'Luis Rodriguez',
-        email: 'luis.rodriguez@automarket.com',
-        dealer: 'AutoMarket Maipú',
-        vehicles: 10,
-        sales: 5,
-        status: 'active'
-      },
-      {
-        id: '4',
-        name: 'María López',
-        email: 'maria.lopez@automarket.com',
-        dealer: 'AutoMarket Puente Alto',
-        vehicles: 8,
-        sales: 4,
-        status: 'active'
-      }
-    ];
+      // Obtener métricas de la sucursal
+      const metrics: BranchMetrics = await dashboardService.getBranchMetrics(userInfo.branch_id);
+      
+      // Convertir métricas a formato del dashboard existente
+      const realStats: RegionalStats = {
+        totalDealers: 1, // Solo la sucursal actual
+        totalVehicles: metrics.totalVehicles,
+        totalSellers: metrics.sellers.length,
+        monthlyRevenue: 0, // TODO: implementar cálculo de revenue
+        activeSellers: metrics.sellers.filter(s => s.sales > 0).length,
+        totalSales: metrics.sellers.reduce((sum, s) => sum + s.sales, 0)
+      };
 
-    setTimeout(() => {
-      setStats(mockStats);
-      setDealers(mockDealers);
-      setSellers(mockSellers);
+      // Convertir datos de sucursal
+      const dealerData: DealerData[] = [{
+        id: userInfo.branch_id,
+        name: 'Mi Sucursal', // TODO: obtener nombre real de la sucursal
+        city: 'Santiago', // TODO: obtener ciudad real
+        vehicles: metrics.totalVehicles,
+        sellers: metrics.sellers.length,
+        revenue: 0, // TODO: implementar
+        status: 'active'
+      }];
+
+      // Convertir datos de vendedores
+      const sellersData: SellerData[] = metrics.sellers.map((seller, index) => ({
+        id: `seller_${index}`,
+        name: seller.name,
+        email: `${seller.name.toLowerCase().replace(' ', '.')}@email.com`,
+        dealer: 'Mi Sucursal',
+        vehicles: 0, // TODO: obtener vehículos por vendedor
+        sales: seller.sales,
+        status: 'active'
+      }));
+
+      setStats(realStats);
+      setDealers(dealerData);
+      setSellers(sellersData);
+      setBranchMetrics(metrics);
       setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error loading branch dashboard data:', error);
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) {
@@ -214,9 +176,9 @@ function SimpleRegionalAdminDashboard() {
             {/* Métricas de rendimiento */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="stat-card-modern orange">
-                <div className="stat-icon">💰</div>
-                <h3>Ingresos Mensuales</h3>
-                <p>${(stats?.monthlyRevenue! / 1000000000).toFixed(1)}B</p>
+                <div className="stat-icon">�</div>
+                <h3>Leads Asignados</h3>
+                <p>{branchMetrics?.leads || 0}</p>
               </div>
               <div className="stat-card-modern green">
                 <div className="stat-icon">📈</div>
@@ -224,6 +186,77 @@ function SimpleRegionalAdminDashboard() {
                 <p>{stats?.totalSales}</p>
               </div>
             </div>
+
+            {/* Métricas de inventario y estado */}
+            {branchMetrics?.inventoryByBrand && branchMetrics.inventoryByBrand.length > 0 && (
+              <div className="dashboard-section">
+                <h2 className="section-title">📊 Inventario por Marca</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {branchMetrics.inventoryByBrand.map((item) => (
+                    <div key={item.brand} className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                      <h4 className="font-semibold text-gray-900">{item.brand}</h4>
+                      <p className="text-2xl font-bold text-green-600">{item.count}</p>
+                      <p className="text-sm text-gray-500">vehículos</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Estado de vehículos */}
+            {branchMetrics?.vehiclesByStatus && branchMetrics.vehiclesByStatus.length > 0 && (
+              <div className="dashboard-section">
+                <h2 className="section-title">🚗 Estado de Vehículos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {branchMetrics.vehiclesByStatus.map((statusItem) => (
+                    <div key={statusItem.status} className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                      <h4 className="font-semibold text-gray-900 capitalize">{statusItem.status}</h4>
+                      <p className="text-2xl font-bold text-blue-600">{statusItem.count}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Rendimiento de vendedores */}
+            {branchMetrics?.sellers && branchMetrics.sellers.length > 0 && (
+              <div className="dashboard-section">
+                <h2 className="section-title">👨‍� Rendimiento de Vendedores</h2>
+                <div className="bg-white rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="thead-green">
+                      <tr>
+                        <th className="px-6 py-3 text-left">Vendedor</th>
+                        <th className="px-6 py-3 text-left">Ventas</th>
+                        <th className="px-6 py-3 text-left">Rendimiento</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {branchMetrics.sellers.map((seller, index) => (
+                        <tr key={seller.name}>
+                          <td className="px-6 py-4">
+                            <div className="font-medium text-gray-900">{seller.name}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-lg font-bold text-green-600">{seller.sales}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                              seller.sales > 3 ? 'bg-green-100 text-green-800' :
+                              seller.sales > 1 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {seller.sales > 3 ? 'Excelente' : 
+                               seller.sales > 1 ? 'Bueno' : 'Necesita mejorar'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Top Performers */}
             <div className="dashboard-section">

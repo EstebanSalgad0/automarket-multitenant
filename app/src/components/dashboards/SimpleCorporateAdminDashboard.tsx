@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DealerDashboard from './DealerDashboard';
+import { dashboardService, getCurrentUserInfo, type CorporateMetrics } from '../../services/dashboardService';
 
 interface CorporateStats {
   totalTenants: number;
@@ -35,6 +36,7 @@ function SimpleCorporateAdminDashboard() {
   const [stats, setStats] = useState<CorporateStats | null>(null);
   const [tenants, setTenants] = useState<TenantData[]>([]);
   const [regionalAdmins, setRegionalAdmins] = useState<RegionalAdmin[]>([]);
+  const [metrics, setMetrics] = useState<CorporateMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'tenants' | 'regional-admins' | 'dealer-view' | 'analytics'>('overview');
   
@@ -50,105 +52,65 @@ function SimpleCorporateAdminDashboard() {
   const loadDashboardData = async () => {
     setIsLoading(true);
     
-    // Simular datos corporativos
-    const mockStats: CorporateStats = {
-      totalTenants: 15,
-      totalVehicles: 2340,
-      totalUsers: 156,
-      totalRevenue: 24500000000, // $24.5B CLP
-      monthlySales: 450,
-      activeRegions: 8
-    };
+    try {
+      // Obtener información del usuario actual
+      const userInfo = await getCurrentUserInfo();
+      
+      if (!userInfo?.tenant_id) {
+        console.error('User does not have tenant_id');
+        return;
+      }
 
-    const mockTenants: TenantData[] = [
-      {
-        id: '1',
-        name: 'AutoMarket Santiago Centro',
+      // Obtener métricas corporativas reales
+      const metrics: CorporateMetrics = await dashboardService.getCorporateMetrics(userInfo.tenant_id);
+      
+      // Convertir métricas a formato del dashboard existente
+      const realStats: CorporateStats = {
+        totalTenants: 1, // Por ahora solo el tenant del usuario
+        totalVehicles: metrics.totalVehicles,
+        totalUsers: 0, // TODO: implementar conteo de usuarios
+        totalRevenue: 0, // TODO: implementar cálculo de revenue
+        monthlySales: metrics.salesThisMonth,
+        activeRegions: metrics.topBranches.length
+      };
+
+      // Para mantener la UI existente, vamos a generar datos de tenant basados en las métricas
+      const realTenantData: TenantData[] = [{
+        id: userInfo.tenant_id,
+        name: userInfo.tenant_id === 'toyota-centro' ? 'Toyota Centro' : 
+              userInfo.tenant_id === 'premium-motors' ? 'Premium Motors' :
+              userInfo.tenant_id === 'ford-chile' ? 'Ford Chile' :
+              userInfo.tenant_id === 'nissan-chile' ? 'Nissan Chile' : 'Tenant Principal',
         region: 'Metropolitana',
         type: 'dealership',
-        vehicles: 450,
-        users: 25,
-        revenue: 8500000000,
+        vehicles: metrics.totalVehicles,
+        users: 0, // TODO: implementar
+        revenue: 0, // TODO: implementar
         status: 'active'
-      },
-      {
-        id: '2',
-        name: 'AutoMarket Valparaíso',
-        region: 'Valparaíso',
-        type: 'dealership',
-        vehicles: 280,
-        users: 18,
-        revenue: 4200000000,
-        status: 'active'
-      },
-      {
-        id: '3',
-        name: 'AutoMarket Concepción',
-        region: 'Bío Bío',
-        type: 'dealership',
-        vehicles: 320,
-        users: 22,
-        revenue: 5100000000,
-        status: 'active'
-      },
-      {
-        id: '4',
-        name: 'AutoMarket La Serena',
-        region: 'Coquimbo',
-        type: 'dealership',
-        vehicles: 180,
-        users: 12,
-        revenue: 2800000000,
-        status: 'active'
-      },
-      {
-        id: '5',
-        name: 'AutoMarket Temuco',
-        region: 'Araucanía',
-        type: 'dealership',
-        vehicles: 220,
-        users: 15,
-        revenue: 3400000000,
-        status: 'active'
-      }
-    ];
+      }];
 
-    const mockRegionalAdmins: RegionalAdmin[] = [
-      {
-        id: 'ra1',
-        name: 'Carlos Mendoza',
-        email: 'carlos.mendoza@automarket.com',
-        region: 'Metropolitana',
-        tenantsManaged: 5,
-        status: 'active',
-        createdAt: '2024-01-15'
-      },
-      {
-        id: 'ra2',
-        name: 'María González',
-        email: 'maria.gonzalez@automarket.com',
-        region: 'Valparaíso',
-        tenantsManaged: 3,
-        status: 'active',
-        createdAt: '2024-02-10'
-      },
-      {
-        id: 'ra3',
-        name: 'Pedro Sánchez',
-        email: 'pedro.sanchez@automarket.com',
-        region: 'Bío Bío',
-        tenantsManaged: 4,
-        status: 'active',
-        createdAt: '2024-03-05'
-      }
-    ];
+      // Mock de regional admins (mantener UI existente)
+      const mockRegionalAdmins: RegionalAdmin[] = [
+        {
+          id: 'ra1',
+          name: 'Gerente Regional',
+          email: `gerente@${userInfo.tenant_id}.com`,
+          region: 'Metropolitana',
+          tenantsManaged: 1,
+          status: 'active',
+          createdAt: '2024-01-15'
+        }
+      ];
 
-    setTimeout(() => {
-      setStats(mockStats);
-      setTenants(mockTenants);
+      setStats(realStats);
+      setTenants(realTenantData);
       setRegionalAdmins(mockRegionalAdmins);
+      setMetrics(metrics);
       setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      setIsLoading(false);
+    }
   };
 
   // Funciones para gestionar administradores regionales
@@ -258,15 +220,81 @@ function SimpleCorporateAdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="stat-card-modern orange">
                 <div className="stat-icon">💰</div>
-                <h3>Ingresos Totales</h3>
-                <p>${(stats?.totalRevenue! / 1000000000).toFixed(1)}M</p>
+                <h3>Leads del Mes</h3>
+                <p>{metrics?.leadsThisMonth || 0}</p>
               </div>
               <div className="stat-card-modern">
                 <div className="stat-icon">📈</div>
                 <h3>Ventas Mensuales</h3>
-                <p>{stats?.monthlySales}</p>
+                <p>{metrics?.salesThisMonth || 0}</p>
               </div>
             </div>
+
+            {/* Métricas de rendimiento */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Top Sucursales */}
+              <div className="dashboard-section">
+                <h2 className="section-title">🏆 Top Sucursales por Ventas</h2>
+                <div className="bg-white rounded-lg p-4">
+                  {metrics?.topBranches && metrics.topBranches.length > 0 ? (
+                    <div className="space-y-3">
+                      {metrics.topBranches.map((branch, index) => (
+                        <div key={branch.name} className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-500 text-white text-sm font-bold mr-3">
+                              {index + 1}
+                            </span>
+                            <span className="font-medium">{branch.name}</span>
+                          </div>
+                          <span className="text-lg font-bold text-green-600">{branch.sales} ventas</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No hay datos de ventas por sucursal</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Vendedores */}
+              <div className="dashboard-section">
+                <h2 className="section-title">👨‍💼 Top Vendedores</h2>
+                <div className="bg-white rounded-lg p-4">
+                  {metrics?.topSellers && metrics.topSellers.length > 0 ? (
+                    <div className="space-y-3">
+                      {metrics.topSellers.map((seller, index) => (
+                        <div key={seller.name} className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500 text-white text-sm font-bold mr-3">
+                              {index + 1}
+                            </span>
+                            <span className="font-medium">{seller.name}</span>
+                          </div>
+                          <span className="text-lg font-bold text-blue-600">{seller.sales} ventas</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">No hay datos de ventas por vendedor</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Estado de vehículos */}
+            {metrics?.vehiclesByStatus && metrics.vehiclesByStatus.length > 0 && (
+              <div className="dashboard-section">
+                <h2 className="section-title">🚗 Estado de Vehículos</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {metrics.vehiclesByStatus.map((statusItem) => (
+                    <div key={statusItem.status} className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+                      <h4 className="font-semibold text-gray-900 capitalize">{statusItem.status}</h4>
+                      <p className="text-2xl font-bold text-blue-600">{statusItem.count}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Resumen de regiones */}
             <div className="dashboard-section">

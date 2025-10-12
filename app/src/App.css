@@ -104,6 +104,17 @@ html {
   box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
 }
 
+/* Nuevo ícono SVG personalizado */
+.logo-icon-svg {
+  filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.logo:hover .logo-icon-svg {
+  transform: translateY(-2px) rotate(-3deg) scale(1.1);
+  filter: drop-shadow(0 8px 20px rgba(102, 126, 234, 0.4));
+}
+
 .nav-menu {
   display: flex;
   gap: 2rem;
@@ -1425,10 +1436,15 @@ html {
 .footer-brand .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
+  color: white;
+}
+
+.footer-brand .logo .logo-icon-svg {
+  filter: drop-shadow(0 2px 8px rgba(102, 126, 234, 0.3));
 }
 
 .footer-brand p {

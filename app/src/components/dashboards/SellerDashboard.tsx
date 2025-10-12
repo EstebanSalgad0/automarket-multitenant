@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { dashboardService, getCurrentUserInfo, type SellerMetrics } from '../../services/dashboardService';
 
 interface SellerDashboardProps {
   sellerInfo?: {
