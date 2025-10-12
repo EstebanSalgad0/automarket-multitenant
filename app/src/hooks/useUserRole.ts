@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from './useAuth'
 
-export type UserRole = 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer' | null
+export type UserRole = 'corporate_admin' | 'branch_manager' | 'individual_seller' | 'automotive_seller' | 'sales_person' | 'buyer' | null
 
 interface UserRoleData {
   role: UserRole

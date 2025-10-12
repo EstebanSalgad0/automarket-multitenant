@@ -9,6 +9,7 @@ import LeadList from './components/LeadList'
 import CorporateAdminDashboardReal from './components/dashboards/CorporateAdminDashboardReal'
 import BranchManagerDashboard from './components/dashboards/BranchManagerDashboard'
 import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
+import RoleBasedDashboard from './components/dashboards/RoleBasedDashboard'
 import LoginModal from './components/LoginModal'
 import SupabaseDebugPanel from './components/SupabaseDebugPanel'
 import UserDebugPanel from './components/UserDebugPanel'
@@ -24,7 +25,7 @@ interface SearchFilters {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard' | 'enhanced-dashboard'>('home')
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     type: '',
     brand: '',
@@ -133,6 +134,34 @@ function App() {
     )
   }
 
+  if (currentView === 'enhanced-dashboard') {
+    return (
+      <div>
+        <button 
+          onClick={() => setCurrentView('home')} 
+          style={{ 
+            position: 'fixed',
+            top: '20px',
+            left: '20px',
+            zIndex: 1000,
+            background: 'white',
+            border: '2px solid #667eea',
+            color: '#667eea',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontSize: '1rem',
+            fontWeight: '600',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}
+        >
+          ← Volver al inicio
+        </button>
+        <RoleBasedDashboard />
+      </div>
+    )
+  }
+
   if (currentView === 'vehicles-catalog') {
     return <VehiclesCatalog onBack={() => setCurrentView('home')} initialFilters={searchFilters} />
   }
@@ -156,6 +185,8 @@ function App() {
             <div className="nav-dropdown">
               <button className="nav-link">Dashboards ▼</button>
               <div className="nav-dropdown-content">
+                <button onClick={() => setCurrentView('enhanced-dashboard')}>🚀 Dashboard Mejorado</button>
+                <hr style={{ margin: '5px 0', border: 'none', borderTop: '1px solid #e1e5e9' }} />
                 <button onClick={() => setCurrentView('corporate-dashboard')}>Corporativo</button>
                 <button onClick={() => setCurrentView('branch-dashboard')}>Sucursal</button>
                 <button onClick={() => setCurrentView('sales-dashboard')}>Ventas</button>

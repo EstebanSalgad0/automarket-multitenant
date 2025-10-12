@@ -98,6 +98,80 @@ export interface UserProfile {
   last_name: string
 }
 
+export interface BranchData {
+  id: string
+  name: string
+  address: string
+  phone: string
+  email: string
+  manager_id?: string
+  tenant_id: string
+  created_at: string
+}
+
+export interface EmployeeData {
+  id: string
+  email: string
+  role: string
+  branch_id?: string
+  first_name: string
+  last_name: string
+  phone?: string
+  created_at: string
+}
+
+export interface CorporateAdminMetrics {
+  totalEmployees: number
+  totalBranches: number
+  totalVehicles: number
+  totalLeads: number
+  monthlyRevenue: number
+  topPerformingBranches: Array<{
+    branch_name: string
+    sales_count: number
+    revenue: number
+  }>
+  topPerformingSellers: Array<{
+    seller_name: string
+    sales_count: number
+    revenue: number
+  }>
+  vehiclesByStatus: Array<{
+    status: string
+    count: number
+  }>
+}
+
+export interface BranchManagerMetrics {
+  branchEmployees: number
+  branchVehiclesCount: number
+  branchLeadsCount: number
+  branchRevenue: number
+  employees: EmployeeData[]
+  vehiclesList: VehicleStats[]
+  leadsList: LeadStats[]
+  salesByEmployee: Array<{
+    employee_name: string
+    sales_count: number
+    revenue: number
+  }>
+}
+
+export interface SellerMetrics {
+  myVehicles: number
+  myLeads: number
+  mySales: number
+  myRevenue: number
+  myVehiclesList: VehicleStats[]
+  myLeadsList: LeadStats[]
+  monthlyPerformance: Array<{
+    month: string
+    sales: number
+    revenue: number
+  }>
+  conversionRate: number
+}
+
 export interface TeamMemberStats {
   id: string
   full_name: string
@@ -484,6 +558,358 @@ export class DashboardService {
     } catch (error) {
       console.error('Error getting tenant info:', error)
       return null
+    }
+  }
+
+  // =========================================================================
+  // MÉTODOS ESPECÍFICOS POR ROL
+  // =========================================================================
+
+  /**
+   * Obtener métricas completas para Administrador Corporativo
+   */
+  async getCorporateAdminMetrics(tenantId: string): Promise<CorporateAdminMetrics> {
+    try {
+      // Empleados totales
+      const { count: totalEmployees } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .neq('role', 'buyer')
+
+      // Sucursales totales
+      const { count: totalBranches } = await supabase
+        .from('branches')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+
+      // Vehículos totales
+      const { count: totalVehicles } = await supabase
+        .from('vehicles')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+
+      // Leads totales
+      const { count: totalLeads } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+
+      // Revenue mensual
+      const currentMonth = new Date()
+      currentMonth.setDate(1)
+      const { data: salesData } = await supabase
+        .from('vehicles')
+        .select('price')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'sold')
+        .gte('updated_at', currentMonth.toISOString())
+
+      const monthlyRevenue = salesData?.reduce((sum, vehicle: any) => sum + (vehicle.price || 0), 0) || 0
+
+      // Top sucursales por ventas
+      const { data: branchSalesData } = await supabase
+        .from('vehicles')
+        .select(`
+          price,
+          branches!inner(name)
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('status', 'sold')
+
+      const branchSalesMap = new Map()
+      branchSalesData?.forEach((sale: any) => {
+        const branchName = sale.branches.name
+        const current = branchSalesMap.get(branchName) || { sales_count: 0, revenue: 0 }
+        branchSalesMap.set(branchName, {
+          sales_count: current.sales_count + 1,
+          revenue: current.revenue + sale.price
+        })
+      })
+
+      const topPerformingBranches = Array.from(branchSalesMap.entries())
+        .map(([branch_name, data]) => ({ branch_name, ...data }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5)
+
+      // Top vendedores
+      const { data: sellerSalesData } = await supabase
+        .from('vehicles')
+        .select(`
+          price,
+          users!inner(user_profiles!inner(first_name, last_name))
+        `)
+        .eq('tenant_id', tenantId)
+        .eq('status', 'sold')
+
+      const sellerSalesMap = new Map()
+      sellerSalesData?.forEach((sale: any) => {
+        const sellerName = `${sale.users.user_profiles.first_name} ${sale.users.user_profiles.last_name}`
+        const current = sellerSalesMap.get(sellerName) || { sales_count: 0, revenue: 0 }
+        sellerSalesMap.set(sellerName, {
+          sales_count: current.sales_count + 1,
+          revenue: current.revenue + sale.price
+        })
+      })
+
+      const topPerformingSellers = Array.from(sellerSalesMap.entries())
+        .map(([seller_name, data]) => ({ seller_name, ...data }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5)
+
+      // Vehículos por estado
+      const { data: vehicleStatusData } = await supabase
+        .from('vehicles')
+        .select('status')
+        .eq('tenant_id', tenantId)
+
+      const statusMap = new Map()
+      vehicleStatusData?.forEach((vehicle: any) => {
+        statusMap.set(vehicle.status, (statusMap.get(vehicle.status) || 0) + 1)
+      })
+
+      const vehiclesByStatus = Array.from(statusMap.entries())
+        .map(([status, count]) => ({ status, count }))
+
+      return {
+        totalEmployees: totalEmployees || 0,
+        totalBranches: totalBranches || 0,
+        totalVehicles: totalVehicles || 0,
+        totalLeads: totalLeads || 0,
+        monthlyRevenue,
+        topPerformingBranches,
+        topPerformingSellers,
+        vehiclesByStatus
+      }
+    } catch (error) {
+      console.error('Error getting corporate admin metrics:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtener métricas para Jefe de Sucursal
+   */
+  async getBranchManagerMetrics(branchId: string): Promise<BranchManagerMetrics> {
+    try {
+      // Empleados de la sucursal
+      const { data: employees, count: branchEmployees } = await supabase
+        .from('users')
+        .select(`
+          id,
+          email,
+          role,
+          branch_id,
+          user_profiles!inner(first_name, last_name, phone),
+          created_at
+        `, { count: 'exact' })
+        .eq('branch_id', branchId)
+        .neq('role', 'buyer')
+
+      const employeesList: EmployeeData[] = employees?.map((emp: any) => ({
+        id: emp.id,
+        email: emp.email,
+        role: emp.role,
+        branch_id: emp.branch_id,
+        first_name: emp.user_profiles.first_name,
+        last_name: emp.user_profiles.last_name,
+        phone: emp.user_profiles.phone,
+        created_at: emp.created_at
+      })) || []
+
+      // Vehículos de la sucursal
+      const { data: vehiclesData, count: branchVehiclesCount } = await supabase
+        .from('vehicles')
+        .select('*', { count: 'exact' })
+        .eq('branch_id', branchId)
+
+      const vehiclesList: VehicleStats[] = vehiclesData?.map((vehicle: any) => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        price: vehicle.price,
+        status: vehicle.status,
+        mileage: vehicle.mileage,
+        condition_type: vehicle.condition_type,
+        views_count: vehicle.views_count || 0,
+        favorites_count: vehicle.favorites_count || 0,
+        created_at: vehicle.created_at,
+        updated_at: vehicle.updated_at
+      })) || []
+
+      // Leads de la sucursal
+      const { data: leadsData, count: branchLeadsCount } = await supabase
+        .from('leads')
+        .select(`
+          *,
+          vehicles!inner(make, model, price)
+        `, { count: 'exact' })
+        .eq('branch_id', branchId)
+
+      const leadsList: LeadStats[] = leadsData?.map((lead: any) => ({
+        id: lead.id,
+        vehicle_id: lead.vehicle_id,
+        customer_name: lead.customer_name,
+        customer_email: lead.customer_email,
+        customer_phone: lead.customer_phone,
+        status: lead.status,
+        created_at: lead.created_at,
+        vehicle: {
+          make: lead.vehicles.make,
+          model: lead.vehicles.model,
+          price: lead.vehicles.price
+        }
+      })) || []
+
+      // Revenue de la sucursal
+      const { data: branchSalesData } = await supabase
+        .from('vehicles')
+        .select('price')
+        .eq('branch_id', branchId)
+        .eq('status', 'sold')
+
+      const branchRevenue = branchSalesData?.reduce((sum, vehicle: any) => sum + (vehicle.price || 0), 0) || 0
+
+      // Ventas por empleado
+      const salesByEmployee = await Promise.all(
+        employeesList.map(async (employee) => {
+          const { data: empSales } = await supabase
+            .from('vehicles')
+            .select('price')
+            .eq('seller_id', employee.id)
+            .eq('status', 'sold')
+
+          const sales_count = empSales?.length || 0
+          const revenue = empSales?.reduce((sum, sale: any) => sum + (sale.price || 0), 0) || 0
+
+          return {
+            employee_name: `${employee.first_name} ${employee.last_name}`,
+            sales_count,
+            revenue
+          }
+        })
+      )
+
+      return {
+        branchEmployees: branchEmployees || 0,
+        branchVehiclesCount: branchVehiclesCount || 0,
+        branchLeadsCount: branchLeadsCount || 0,
+        branchRevenue,
+        employees: employeesList,
+        vehiclesList,
+        leadsList,
+        salesByEmployee
+      }
+    } catch (error) {
+      console.error('Error getting branch manager metrics:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Obtener métricas para Vendedor
+   */
+  async getSellerMetrics(sellerId: string): Promise<SellerMetrics> {
+    try {
+      // Mis vehículos
+      const { data: vehiclesData, count: myVehicles } = await supabase
+        .from('vehicles')
+        .select('*', { count: 'exact' })
+        .eq('seller_id', sellerId)
+
+      const myVehiclesList: VehicleStats[] = vehiclesData?.map((vehicle: any) => ({
+        id: vehicle.id,
+        make: vehicle.make,
+        model: vehicle.model,
+        year: vehicle.year,
+        price: vehicle.price,
+        status: vehicle.status,
+        mileage: vehicle.mileage,
+        condition_type: vehicle.condition_type,
+        views_count: vehicle.views_count || 0,
+        favorites_count: vehicle.favorites_count || 0,
+        created_at: vehicle.created_at,
+        updated_at: vehicle.updated_at
+      })) || []
+
+      // Mis leads
+      const { data: leadsData, count: myLeads } = await supabase
+        .from('leads')
+        .select(`
+          *,
+          vehicles!inner(make, model, price)
+        `, { count: 'exact' })
+        .eq('assigned_to', sellerId)
+
+      const myLeadsList: LeadStats[] = leadsData?.map((lead: any) => ({
+        id: lead.id,
+        vehicle_id: lead.vehicle_id,
+        customer_name: lead.customer_name,
+        customer_email: lead.customer_email,
+        customer_phone: lead.customer_phone,
+        status: lead.status,
+        created_at: lead.created_at,
+        vehicle: {
+          make: lead.vehicles.make,
+          model: lead.vehicles.model,
+          price: lead.vehicles.price
+        }
+      })) || []
+
+      // Mis ventas
+      const { data: salesData, count: mySales } = await supabase
+        .from('vehicles')
+        .select('price, updated_at', { count: 'exact' })
+        .eq('seller_id', sellerId)
+        .eq('status', 'sold')
+
+      const myRevenue = salesData?.reduce((sum, sale: any) => sum + (sale.price || 0), 0) || 0
+
+      // Performance mensual (últimos 6 meses)
+      const monthlyPerformance = []
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date()
+        date.setMonth(date.getMonth() - i)
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1)
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+
+        const { data: monthSales } = await supabase
+          .from('vehicles')
+          .select('price')
+          .eq('seller_id', sellerId)
+          .eq('status', 'sold')
+          .gte('updated_at', startOfMonth.toISOString())
+          .lte('updated_at', endOfMonth.toISOString())
+
+        const sales = monthSales?.length || 0
+        const revenue = monthSales?.reduce((sum, sale: any) => sum + (sale.price || 0), 0) || 0
+
+        monthlyPerformance.push({
+          month: date.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' }),
+          sales,
+          revenue
+        })
+      }
+
+      // Tasa de conversión
+      const totalLeads = myLeads || 0
+      const totalSales = mySales || 0
+      const conversionRate = totalLeads > 0 ? (totalSales / totalLeads) * 100 : 0
+
+      return {
+        myVehicles: myVehicles || 0,
+        myLeads: myLeads || 0,
+        mySales: mySales || 0,
+        myRevenue,
+        myVehiclesList,
+        myLeadsList,
+        monthlyPerformance,
+        conversionRate
+      }
+    } catch (error) {
+      console.error('Error getting seller metrics:', error)
+      throw error
     }
   }
 }
