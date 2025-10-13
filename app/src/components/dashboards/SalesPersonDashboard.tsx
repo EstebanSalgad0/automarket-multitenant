@@ -24,7 +24,7 @@ interface MyLead {
 }
 
 const SalesPersonDashboard: React.FC = () => {
-  const [stats, setStats] = useState<SalesPersonStats>({
+  const [stats, _setStats] = useState<SalesPersonStats>({
     sales_person_id: 'sp-001',
     name: 'Carlos Rodriguez',
     assigned_leads: 15,
@@ -165,16 +165,6 @@ const SalesPersonDashboard: React.FC = () => {
       case 'low': return '🟢'
       default: return '⚫'
     }
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
   }
 
   const getDaysFromLastContact = (lastContact: string) => {

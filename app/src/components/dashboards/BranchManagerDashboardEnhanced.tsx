@@ -2,18 +2,27 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { dashboardService } from '../../services/dashboardService'
 import type { BranchManagerMetrics } from '../../services/dashboardService'
+import { employeeManagementService } from '../../services/employeeManagementService'
+import type { EmployeeData } from '../../services/employeeManagementService'
 import { supabase } from '../../lib/supabase'
 import AutoMarketIcon from '../AutoMarketIcon'
+import EmployeeForm from '../EmployeeForm'
+import FireEmployeeModal from '../FireEmployeeModal'
 
 interface BranchManagerDashboardEnhancedProps {
   isEmbedded?: boolean
 }
 
 const BranchManagerDashboardEnhanced: React.FC<BranchManagerDashboardEnhancedProps> = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'vehicles' | 'leads' | 'performance'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'vehicles' | 'leads' | 'performance' | 'employee-management'>('overview')
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState<BranchManagerMetrics | null>(null)
   const [branchInfo, setBranchInfo] = useState<any>(null)
+  const [employees, setEmployees] = useState<EmployeeData[]>([])
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false)
+  const [showFireModal, setShowFireModal] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null)
+  const [employeesLoading, setEmployeesLoading] = useState(false)
   const { user } = useAuth()
 
   // Formatear moneda chilena
@@ -59,9 +68,59 @@ const BranchManagerDashboardEnhanced: React.FC<BranchManagerDashboardEnhancedPro
     }
   }
 
+  // Cargar empleados de la sucursal
+  const loadBranchEmployees = async () => {
+    if (!user || !branchInfo) return
+
+    setEmployeesLoading(true)
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('tenant_id, branch_id')
+        .eq('id', user.id)
+        .single() as { data: any }
+
+      if (userData?.tenant_id && userData?.branch_id) {
+        const employeesList = await employeeManagementService.getBranchEmployees(
+          userData.branch_id,
+          userData.tenant_id
+        )
+        setEmployees(employeesList)
+      }
+    } catch (error) {
+      console.error('Error loading employees:', error)
+    } finally {
+      setEmployeesLoading(false)
+    }
+  }
+
+  // Manejar creación exitosa de empleado
+  const handleEmployeeCreated = (newEmployee: any) => {
+    setEmployees(prev => [newEmployee, ...prev])
+    loadBranchData() // Recargar métricas
+  }
+
+  // Manejar despido exitoso de empleado
+  const handleEmployeeFired = () => {
+    loadBranchEmployees() // Recargar lista de empleados
+    loadBranchData() // Recargar métricas
+  }
+
+  // Abrir modal de despido
+  const handleFireEmployee = (employee: EmployeeData) => {
+    setSelectedEmployee(employee)
+    setShowFireModal(true)
+  }
+
   useEffect(() => {
     loadBranchData()
   }, [user])
+
+  useEffect(() => {
+    if (activeTab === 'employee-management') {
+      loadBranchEmployees()
+    }
+  }, [activeTab, user, branchInfo])
 
   if (loading) {
     return (
@@ -205,6 +264,12 @@ const BranchManagerDashboardEnhanced: React.FC<BranchManagerDashboardEnhancedPro
           style={tabStyle(activeTab === 'performance')}
         >
           📈 Performance
+        </button>
+        <button 
+          onClick={() => setActiveTab('employee-management')}
+          style={tabStyle(activeTab === 'employee-management')}
+        >
+          👔 Gestión RR.HH.
         </button>
       </div>
 
@@ -508,7 +573,174 @@ const BranchManagerDashboardEnhanced: React.FC<BranchManagerDashboardEnhancedPro
             </div>
           </div>
         )}
+
+        {activeTab === 'employee-management' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1a202c', margin: 0 }}>
+                👔 Gestión de Empleados
+              </h2>
+              <button
+                onClick={() => setShowEmployeeForm(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                ➕ Agregar Empleado
+              </button>
+            </div>
+
+            {/* Lista de empleados */}
+            <div style={cardStyle}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a202c', marginBottom: '20px' }}>
+                Empleados de la Sucursal
+              </h3>
+              
+              {employeesLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    border: '4px solid #e2e8f0',
+                    borderTop: '4px solid #48bb78',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 16px'
+                  }}></div>
+                  <p style={{ color: '#718096' }}>Cargando empleados...</p>
+                </div>
+              ) : employees.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <p style={{ color: '#718096', fontSize: '16px' }}>
+                    No hay empleados registrados en esta sucursal.
+                  </p>
+                  <button
+                    onClick={() => setShowEmployeeForm(true)}
+                    style={{
+                      background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      marginTop: '16px'
+                    }}
+                  >
+                    Agregar Primer Empleado
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {employees.map((employee) => (
+                    <div
+                      key={employee.id}
+                      style={{
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        background: '#f8fafc',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1a202c' }}>
+                            {employee.first_name} {employee.last_name}
+                          </h4>
+                          <span style={{
+                            marginLeft: '12px',
+                            padding: '4px 8px',
+                            background: employee.role === 'individual_seller' ? '#e6fffa' : '#f0fff4',
+                            color: employee.role === 'individual_seller' ? '#00a693' : '#22543d',
+                            fontSize: '12px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            {employee.role === 'individual_seller' ? 'Vendedor Particular' : 
+                             employee.role === 'sales_person' ? 'Vendedor General' : employee.role}
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                            📧 {employee.email}
+                          </p>
+                          {employee.phone && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              📱 {employee.phone}
+                            </p>
+                          )}
+                          {employee.hire_date && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              📅 Desde: {new Date(employee.hire_date).toLocaleDateString()}
+                            </p>
+                          )}
+                          {employee.salary && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              💰 {formatCurrency(employee.salary)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleFireEmployee(employee)}
+                          style={{
+                            background: 'linear-gradient(135deg, #f56565 0%, #c53030 100%)',
+                            color: 'white',
+                            border: 'none',
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          🚫 Despedir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modales */}
+      {user && branchInfo && (
+        <>
+          <EmployeeForm
+            isOpen={showEmployeeForm}
+            onClose={() => setShowEmployeeForm(false)}
+            onSuccess={handleEmployeeCreated}
+            tenantId={branchInfo.tenant_id || ''}
+            currentUserRole="branch_manager"
+            currentBranchId={branchInfo.id}
+          />
+          
+          <FireEmployeeModal
+            isOpen={showFireModal}
+            onClose={() => setShowFireModal(false)}
+            onSuccess={handleEmployeeFired}
+            employee={selectedEmployee}
+            performedBy={user.id}
+            tenantId={branchInfo.tenant_id || ''}
+          />
+        </>
+      )}
     </div>
   )
 }

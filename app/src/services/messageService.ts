@@ -3,7 +3,7 @@ import type { Database } from '../lib/database.types'
 
 type Message = Database['public']['Tables']['messages']['Row']
 type MessageInsert = Database['public']['Tables']['messages']['Insert']
-type MessageUpdate = Database['public']['Tables']['messages']['Update']
+// type MessageUpdate = Database['public']['Tables']['messages']['Update'] // Unused for now
 
 export interface MessageWithDetails extends Message {
   sender?: {
@@ -148,7 +148,7 @@ export const messageService = {
     try {
       const { supabase } = getSupabaseWithTenant()
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('messages')
         .insert([messageData])
         .select()
@@ -170,7 +170,7 @@ export const messageService = {
     try {
       const { supabase } = getSupabaseWithTenant()
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('messages')
         .update({ 
           is_read: true,
@@ -192,7 +192,7 @@ export const messageService = {
     try {
       const { supabase } = getSupabaseWithTenant()
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('messages')
         .update({ 
           is_read: true,

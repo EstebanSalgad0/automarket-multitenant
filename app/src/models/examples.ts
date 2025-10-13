@@ -14,12 +14,13 @@ import {
   Tenant, 
   ModelFactory,
   UserType, 
-  UserStatus,
-  VehicleStatus,
+  // UserStatus,
+  // VehicleStatus,
   FuelType,
   TransmissionType,
   BodyType,
-  TenantStatus 
+  // TenantStatus 
+  
 } from './index';
 
 // ========================================

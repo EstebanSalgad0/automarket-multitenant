@@ -10,10 +10,14 @@ import CorporateAdminDashboardReal from './components/dashboards/CorporateAdminD
 import BranchManagerDashboard from './components/dashboards/BranchManagerDashboard'
 import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
 import RoleBasedDashboard from './components/dashboards/RoleBasedDashboard'
+import CustomerDashboard from './components/dashboards/CustomerDashboard'
 import LoginModal from './components/LoginModal'
 import SupabaseDebugPanel from './components/SupabaseDebugPanel'
 import UserDebugPanel from './components/UserDebugPanel'
 import AutoMarketIcon from './components/AutoMarketIcon'
+import SecurityTest from './components/test/SecurityTest'
+import DatabaseTest from './components/test/DatabaseTest'
+import RealtimeTest from './components/test/RealtimeTest'
 import { useAuth } from './hooks/useAuth'
 import { useUserRole, getRoleName, getRoleIcon, getRoleColor } from './hooks/useUserRole'
 
@@ -25,7 +29,7 @@ interface SearchFilters {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard' | 'enhanced-dashboard'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard' | 'enhanced-dashboard' | 'customer-dashboard' | 'security-test' | 'database-test' | 'realtime-test'>('home')
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     type: '',
     brand: '',
@@ -166,6 +170,76 @@ function App() {
     return <VehiclesCatalog onBack={() => setCurrentView('home')} initialFilters={searchFilters} />
   }
 
+  if (currentView === 'customer-dashboard') {
+    return <CustomerDashboard />
+  }
+
+  if (currentView === 'security-test') {
+    return (
+      <div style={{ padding: '20px' }}>
+        <button 
+          onClick={() => setCurrentView('home')} 
+          style={{ 
+            marginBottom: '20px', 
+            padding: '10px 20px', 
+            background: '#007bff', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Volver al Inicio
+        </button>
+        <SecurityTest />
+      </div>
+    )
+  }
+
+  if (currentView === 'database-test') {
+    return (
+      <div style={{ padding: '20px' }}>
+        <button 
+          onClick={() => setCurrentView('home')} 
+          style={{ 
+            marginBottom: '20px', 
+            padding: '10px 20px', 
+            background: '#007bff', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Volver al Inicio
+        </button>
+        <DatabaseTest tenantId="demo-tenant-id" />
+      </div>
+    )
+  }
+
+  if (currentView === 'realtime-test') {
+    return (
+      <div style={{ padding: '20px' }}>
+        <button 
+          onClick={() => setCurrentView('home')} 
+          style={{ 
+            marginBottom: '20px', 
+            padding: '10px 20px', 
+            background: '#007bff', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          ← Volver al Inicio
+        </button>
+        <RealtimeTest tenantId="demo-tenant-id" />
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       {/* Header */}
@@ -179,6 +253,7 @@ function App() {
           </div>
           
           <nav className="nav-menu">
+            <button className="nav-link" onClick={() => setCurrentView('customer-dashboard')}>🚗 Panel Cliente</button>
             <button className="nav-link" onClick={() => setCurrentView('vehicles-catalog')}>Comprar</button>
             <button className="nav-link" onClick={() => setCurrentView('branches')}>Sucursales</button>
             <button className="nav-link" onClick={() => setCurrentView('leads')}>Leads</button>
@@ -192,6 +267,9 @@ function App() {
                 <button onClick={() => setCurrentView('sales-dashboard')}>Ventas</button>
               </div>
             </div>
+            <button className="nav-link security-test-btn" onClick={() => setCurrentView('security-test')}>🔒 Test Seguridad</button>
+            <button className="nav-link database-test-btn" onClick={() => setCurrentView('database-test')}>🗃️ Test Base de Datos</button>
+            <button className="nav-link realtime-test-btn" onClick={() => setCurrentView('realtime-test')}>🔴 Test Tiempo Real</button>
             <button className="nav-link" onClick={() => {}}>Ayuda</button>
           </nav>
           

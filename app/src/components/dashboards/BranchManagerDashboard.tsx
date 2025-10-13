@@ -22,7 +22,7 @@ interface Lead {
 
 const BranchManagerDashboard: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState('las-condes')
-  const [branchStats, setBranchStats] = useState<BranchStats>({
+  const [branchStats, _setBranchStats] = useState<BranchStats>({
     branch_id: 'las-condes',
     branch_name: 'AutoMarket Las Condes',
     total_vehicles: 85,

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { dashboardService, getCurrentUserInfo, type SellerMetrics } from '../../services/dashboardService';
+import React, { useState } from 'react';
+import VehicleManagement from '../seller/VehicleManagement';
 
 interface SellerDashboardProps {
   sellerInfo?: {
@@ -133,67 +133,7 @@ const SellerDashboard: React.FC<SellerDashboardProps> = ({
 
         {/* Vehicles Tab */}
         {activeTab === 'vehicles' && (
-          <div>
-            <div className="section">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="section-title">Mis Vehículos</h2>
-                <button className="btn-primary">+ Publicar Vehículo</button>
-              </div>
-              
-              <div className="vehicles-grid">
-                <div className="vehicle-card">
-                  <div className="vehicle-image-placeholder">📷</div>
-                  <div className="vehicle-info">
-                    <h3 className="vehicle-title">Chevrolet Spark 2020</h3>
-                    <p className="vehicle-price">$8,500,000</p>
-                    <p className="vehicle-details">Manual • 45,000 km • Gasolina</p>
-                    <div className="vehicle-stats">
-                      <span className="vehicle-stat">👁️ 89 vistas</span>
-                      <span className="vehicle-stat">💬 3 consultas</span>
-                    </div>
-                    <div className="vehicle-actions">
-                      <button className="btn-outline-sm">Editar</button>
-                      <button className="btn-outline-sm">Ver</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="vehicle-card">
-                  <div className="vehicle-image-placeholder">📷</div>
-                  <div className="vehicle-info">
-                    <h3 className="vehicle-title">Toyota Yaris 2021</h3>
-                    <p className="vehicle-price">$12,200,000</p>
-                    <p className="vehicle-details">Automático • 25,000 km • Gasolina</p>
-                    <div className="vehicle-stats">
-                      <span className="vehicle-stat">👁️ 156 vistas</span>
-                      <span className="vehicle-stat">💬 7 consultas</span>
-                    </div>
-                    <div className="vehicle-actions">
-                      <button className="btn-outline-sm">Editar</button>
-                      <button className="btn-outline-sm">Ver</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="vehicle-card">
-                  <div className="vehicle-image-placeholder">📷</div>
-                  <div className="vehicle-info">
-                    <h3 className="vehicle-title">Nissan Versa 2019</h3>
-                    <p className="vehicle-price">$9,800,000</p>
-                    <p className="vehicle-details">Automático • 60,000 km • Gasolina</p>
-                    <div className="vehicle-stats">
-                      <span className="vehicle-stat">👁️ 203 vistas</span>
-                      <span className="vehicle-stat">💬 5 consultas</span>
-                    </div>
-                    <div className="vehicle-actions">
-                      <button className="btn-outline-sm">Editar</button>
-                      <button className="btn-outline-sm">Ver</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <VehicleManagement />
         )}
 
         {/* Inquiries Tab */}

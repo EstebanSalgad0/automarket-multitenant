@@ -162,6 +162,60 @@ html {
   opacity: 1;
 }
 
+.security-test-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%) !important;
+  color: white !important;
+  border: 2px solid transparent !important;
+  font-weight: 700 !important;
+  position: relative !important;
+}
+
+.security-test-btn::before {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(253, 126, 20, 0.2) 100%) !important;
+}
+
+.security-test-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #e8690b 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3) !important;
+}
+
+.database-test-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+  border: 2px solid transparent !important;
+  font-weight: 700 !important;
+  position: relative !important;
+}
+
+.database-test-btn::before {
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.2) 0%, rgba(32, 201, 151, 0.2) 100%) !important;
+}
+
+.database-test-btn:hover {
+  background: linear-gradient(135deg, #218838 0%, #1cb085 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3) !important;
+}
+
+.realtime-test-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #f39c12 100%) !important;
+  color: white !important;
+  border: 2px solid transparent !important;
+  font-weight: 700 !important;
+  position: relative !important;
+}
+
+.realtime-test-btn::before {
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.2) 0%, rgba(243, 156, 18, 0.2) 100%) !important;
+}
+
+.realtime-test-btn:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #e67e22 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3) !important;
+}
+
 .login-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: white !important;

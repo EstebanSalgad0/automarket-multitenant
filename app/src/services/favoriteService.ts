@@ -115,7 +115,7 @@ export const favoriteService = {
         vehicle_id: vehicleId
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('favorites')
         .insert([favoriteData])
         .select()
@@ -206,7 +206,7 @@ export const favoriteService = {
       const newCount = Math.max(0, currentCount + increment)
 
       // Actualizar el vehículo (asumir que hay un campo favorite_count)
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('vehicles')
         .update({ favorite_count: newCount })
         .eq('id', vehicleId)

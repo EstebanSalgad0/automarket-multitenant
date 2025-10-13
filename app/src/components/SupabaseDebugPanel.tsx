@@ -11,9 +11,9 @@ interface User {
 }
 
 export default function SupabaseDebugPanel() {
-  const [authUsers, setAuthUsers] = useState<User[]>([])
+  const [_authUsers, _setAuthUsers] = useState<User[]>([])
   const [tenants, setTenants] = useState<any[]>([])
-  const [currentTenant, setCurrentTenant] = useState<any>(null)
+  const [_currentTenant, setCurrentTenant] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isMinimized, setIsMinimized] = useState(true)
   const { user } = useAuth()

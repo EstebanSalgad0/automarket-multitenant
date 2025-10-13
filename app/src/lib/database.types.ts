@@ -51,9 +51,12 @@ export interface Database {
           updated_at: string
           // Nuevos campos agregados
           branch_id?: string
-          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          role?: 'corporate_admin' | 'branch_manager' | 'individual_seller' | 'automotive_seller' | 'sales_person' | 'buyer'
           full_name?: string
           avatar_url?: string
+          hire_date?: string
+          termination_date?: string
+          termination_reason?: string
         }
         Insert: {
           id?: string
@@ -68,9 +71,12 @@ export interface Database {
           updated_at?: string
           // Nuevos campos agregados
           branch_id?: string
-          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          role?: 'corporate_admin' | 'branch_manager' | 'individual_seller' | 'automotive_seller' | 'sales_person' | 'buyer'
           full_name?: string
           avatar_url?: string
+          hire_date?: string
+          termination_date?: string
+          termination_reason?: string
         }
         Update: {
           email?: string
@@ -82,9 +88,12 @@ export interface Database {
           updated_at?: string
           // Nuevos campos agregados
           branch_id?: string
-          role?: 'corporate_admin' | 'branch_manager' | 'sales_person' | 'buyer'
+          role?: 'corporate_admin' | 'branch_manager' | 'individual_seller' | 'automotive_seller' | 'sales_person' | 'buyer'
           full_name?: string
           avatar_url?: string
+          hire_date?: string
+          termination_date?: string
+          termination_reason?: string
         }
       }
 
@@ -92,8 +101,10 @@ export interface Database {
       user_profiles: {
         Row: {
           user_id: string
+          tenant_id?: string
           first_name: string
           last_name: string
+          phone?: string
           avatar_url?: string
           date_of_birth?: string
           gender?: 'male' | 'female' | 'other'
@@ -469,6 +480,82 @@ export interface Database {
           message?: string
           message_type?: 'text' | 'image' | 'document'
           is_read?: boolean
+        }
+      }
+
+      // Nuevas tablas para gestión de empleados
+      employee_salaries: {
+        Row: {
+          id: string
+          employee_id: string
+          tenant_id: string
+          base_salary: number
+          commission_rate: number
+          bonus: number
+          effective_date: string
+          end_date?: string
+          notes?: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          tenant_id: string
+          base_salary?: number
+          commission_rate?: number
+          bonus?: number
+          effective_date?: string
+          end_date?: string
+          notes?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          base_salary?: number
+          commission_rate?: number
+          bonus?: number
+          effective_date?: string
+          end_date?: string
+          notes?: string
+          updated_at?: string
+        }
+      }
+
+      employee_action_logs: {
+        Row: {
+          id: string
+          employee_id: string
+          tenant_id: string
+          action_type: 'hired' | 'fired' | 'role_changed' | 'transferred' | 'salary_updated' | 'promoted' | 'demoted'
+          performed_by: string
+          reason?: string
+          details?: string
+          previous_values?: any
+          new_values?: any
+          ip_address?: string
+          user_agent?: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          tenant_id: string
+          action_type: 'hired' | 'fired' | 'role_changed' | 'transferred' | 'salary_updated' | 'promoted' | 'demoted'
+          performed_by: string
+          reason?: string
+          details?: string
+          previous_values?: any
+          new_values?: any
+          ip_address?: string
+          user_agent?: string
+          created_at?: string
+        }
+        Update: {
+          reason?: string
+          details?: string
+          previous_values?: any
+          new_values?: any
         }
       }
     }

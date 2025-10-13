@@ -2,19 +2,29 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../hooks/useAuth'
 import { dashboardService } from '../../services/dashboardService'
 import type { CorporateAdminMetrics, BranchData, EmployeeData } from '../../services/dashboardService'
+import { employeeManagementService } from '../../services/employeeManagementService'
+import type { EmployeeData as EmployeeManagementData } from '../../services/employeeManagementService'
 import { supabase } from '../../lib/supabase'
 import AutoMarketIcon from '../AutoMarketIcon'
+import EmployeeForm from '../EmployeeForm'
+import FireEmployeeModal from '../FireEmployeeModal'
 
 interface CorporateAdminDashboardEnhancedProps {
   isEmbedded?: boolean
 }
 
 const CorporateAdminDashboardEnhanced: React.FC<CorporateAdminDashboardEnhancedProps> = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'branches' | 'employees' | 'vehicles' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'branches' | 'employees' | 'vehicles' | 'analytics' | 'hr-management'>('overview')
   const [loading, setLoading] = useState(true)
   const [metrics, setMetrics] = useState<CorporateAdminMetrics | null>(null)
   const [branches, setBranches] = useState<BranchData[]>([])
   const [employees, setEmployees] = useState<EmployeeData[]>([])
+  const [allEmployees, setAllEmployees] = useState<EmployeeManagementData[]>([])
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false)
+  const [showFireModal, setShowFireModal] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeManagementData | null>(null)
+  const [employeesLoading, setEmployeesLoading] = useState(false)
+  const [tenantId, setTenantId] = useState<string>('')
   const { user } = useAuth()
 
   // Formatear moneda chilena
@@ -90,6 +100,7 @@ const CorporateAdminDashboardEnhanced: React.FC<CorporateAdminDashboardEnhancedP
       })) || []
 
       setEmployees(employeesList)
+      setTenantId(userData.tenant_id)
 
     } catch (error) {
       console.error('Error loading corporate data:', error)
@@ -98,9 +109,56 @@ const CorporateAdminDashboardEnhanced: React.FC<CorporateAdminDashboardEnhancedP
     }
   }
 
+  // Cargar todos los empleados para gestión de RR.HH.
+  const loadAllEmployees = async () => {
+    if (!user || !tenantId) return
+
+    setEmployeesLoading(true)
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single() as { data: any }
+
+      if (userData?.tenant_id) {
+        const employeesList = await employeeManagementService.getAllTenantEmployees(userData.tenant_id)
+        setAllEmployees(employeesList)
+      }
+    } catch (error) {
+      console.error('Error loading all employees:', error)
+    } finally {
+      setEmployeesLoading(false)
+    }
+  }
+
+  // Manejar creación exitosa de empleado
+  const handleEmployeeCreated = (newEmployee: any) => {
+    setAllEmployees(prev => [newEmployee, ...prev])
+    loadCorporateData() // Recargar métricas
+  }
+
+  // Manejar despido exitoso de empleado
+  const handleEmployeeFired = () => {
+    loadAllEmployees() // Recargar lista de empleados
+    loadCorporateData() // Recargar métricas
+  }
+
+  // Abrir modal de despido
+  const handleFireEmployee = (employee: EmployeeManagementData) => {
+    setSelectedEmployee(employee)
+    setShowFireModal(true)
+  }
+
   useEffect(() => {
     loadCorporateData()
   }, [user])
+
+  useEffect(() => {
+    if (activeTab === 'hr-management' && tenantId) {
+      loadAllEmployees()
+    }
+  }, [activeTab, tenantId])
 
   if (loading) {
     return (
@@ -244,6 +302,12 @@ const CorporateAdminDashboardEnhanced: React.FC<CorporateAdminDashboardEnhancedP
           style={tabStyle(activeTab === 'analytics')}
         >
           📈 Analytics
+        </button>
+        <button 
+          onClick={() => setActiveTab('hr-management')}
+          style={tabStyle(activeTab === 'hr-management')}
+        >
+          👔 Gestión RR.HH.
         </button>
       </div>
 
@@ -483,7 +547,183 @@ const CorporateAdminDashboardEnhanced: React.FC<CorporateAdminDashboardEnhancedP
             </div>
           </div>
         )}
+
+        {activeTab === 'hr-management' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1a202c', margin: 0 }}>
+                👔 Gestión de Recursos Humanos
+              </h2>
+              <button
+                onClick={() => setShowEmployeeForm(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                ➕ Agregar Empleado
+              </button>
+            </div>
+
+            {/* Lista de todos los empleados del tenant */}
+            <div style={cardStyle}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1a202c', marginBottom: '20px' }}>
+                Todos los Empleados de la Organización
+              </h3>
+              
+              {employeesLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    border: '4px solid #e2e8f0',
+                    borderTop: '4px solid #667eea',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto 16px'
+                  }}></div>
+                  <p style={{ color: '#718096' }}>Cargando empleados...</p>
+                </div>
+              ) : allEmployees.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <p style={{ color: '#718096', fontSize: '16px' }}>
+                    No hay empleados registrados en la organización.
+                  </p>
+                  <button
+                    onClick={() => setShowEmployeeForm(true)}
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      marginTop: '16px'
+                    }}
+                  >
+                    Agregar Primer Empleado
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {allEmployees.map((employee) => (
+                    <div
+                      key={employee.id}
+                      style={{
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '16px',
+                        background: '#f8fafc',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                          <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: '#1a202c' }}>
+                            {employee.first_name} {employee.last_name}
+                          </h4>
+                          <span style={{
+                            marginLeft: '12px',
+                            padding: '4px 8px',
+                            background: 
+                              employee.role === 'branch_manager' ? '#dbeafe' :
+                              employee.role === 'automotive_seller' ? '#fef7cd' :
+                              employee.role === 'individual_seller' ? '#e6fffa' : '#f0fff4',
+                            color: 
+                              employee.role === 'branch_manager' ? '#1e3a8a' :
+                              employee.role === 'automotive_seller' ? '#92400e' :
+                              employee.role === 'individual_seller' ? '#00a693' : '#22543d',
+                            fontSize: '12px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            {employee.role === 'branch_manager' ? 'Jefe de Sucursal' :
+                             employee.role === 'automotive_seller' ? 'Vendedor Automotriz' :
+                             employee.role === 'individual_seller' ? 'Vendedor Particular' :
+                             employee.role === 'sales_person' ? 'Vendedor General' : employee.role}
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+                          <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                            📧 {employee.email}
+                          </p>
+                          {employee.phone && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              📱 {employee.phone}
+                            </p>
+                          )}
+                          {employee.hire_date && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              📅 Desde: {new Date(employee.hire_date).toLocaleDateString()}
+                            </p>
+                          )}
+                          {employee.salary && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#718096' }}>
+                              💰 {formatCurrency(employee.salary)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        {(employee.role === 'branch_manager' || employee.role === 'automotive_seller') && (
+                          <button
+                            onClick={() => handleFireEmployee(employee)}
+                            style={{
+                              background: 'linear-gradient(135deg, #f56565 0%, #c53030 100%)',
+                              color: 'white',
+                              border: 'none',
+                              padding: '8px 16px',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '14px',
+                              fontWeight: '600'
+                            }}
+                          >
+                            🚫 Despedir
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modales */}
+      {tenantId && (
+        <>
+          <EmployeeForm
+            isOpen={showEmployeeForm}
+            onClose={() => setShowEmployeeForm(false)}
+            onSuccess={handleEmployeeCreated}
+            tenantId={tenantId}
+            currentUserRole="corporate_admin"
+          />
+          
+          <FireEmployeeModal
+            isOpen={showFireModal}
+            onClose={() => setShowFireModal(false)}
+            onSuccess={handleEmployeeFired}
+            employee={selectedEmployee}
+            performedBy={user?.id || ''}
+            tenantId={tenantId}
+          />
+        </>
+      )}
     </div>
   )
 }

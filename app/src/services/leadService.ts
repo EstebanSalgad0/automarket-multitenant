@@ -152,7 +152,7 @@ export const leadService = {
       ])
 
       return {
-        ...data,
+        ...(data as any),
         messages_count: messagesCount,
         last_activity: lastActivity
       }
@@ -166,7 +166,7 @@ export const leadService = {
     try {
       const { supabase } = getSupabaseWithTenant()
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('leads')
         .insert([leadData])
         .select()
@@ -188,7 +188,7 @@ export const leadService = {
     try {
       const { supabase } = getSupabaseWithTenant()
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('leads')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
@@ -296,14 +296,14 @@ export const leadService = {
         return null
       }
 
-      return data?.created_at || null
+      return (data as any)?.created_at || null
     } catch (error) {
       console.error('Last activity error:', error)
       return null
     }
   },
 
-  async recordActivity(leadId: string, activity: string): Promise<void> {
+  async recordActivity(leadId: string, _activity: string): Promise<void> {
     try {
       // Por ahora solo actualizar el timestamp, después podemos crear tabla de actividades
       await this.updateLead(leadId, { updated_at: new Date().toISOString() })

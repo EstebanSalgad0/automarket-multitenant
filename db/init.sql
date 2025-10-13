@@ -131,6 +131,31 @@ insert into vehiculos (tenant_id, marca, modelo, año, precio, kilometraje, colo
   ('33333333-3333-3333-3333-333333333333', 'Nissan', 'Sentra', 2018, 195000.00, 68000, 'Gris', 'Gasolina', 'Manual', 'Nissan Sentra 2018, único dueño, excelente mantenimiento', 'disponible'),
   ('33333333-3333-3333-3333-333333333333', 'Ford', 'Focus', 2017, 178000.00, 75000, 'Azul', 'Gasolina', 'Manual', 'Ford Focus 2017, ideal para ciudad, bajo consumo', 'disponible');
 
+-- Tabla de auditoría para el sistema de seguridad
+create table if not exists audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  user_email text,
+  user_role text,
+  tenant_id text not null,
+  event_type text not null,
+  resource_type text not null,
+  resource_id text,
+  action text not null,
+  description text not null,
+  ip_address text,
+  user_agent text,
+  metadata jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- Índices para la tabla de auditoría para mejorar rendimiento
+create index if not exists idx_audit_logs_tenant_id on audit_logs(tenant_id);
+create index if not exists idx_audit_logs_user_id on audit_logs(user_id);
+create index if not exists idx_audit_logs_event_type on audit_logs(event_type);
+create index if not exists idx_audit_logs_created_at on audit_logs(created_at desc);
+create index if not exists idx_audit_logs_resource on audit_logs(resource_type, resource_id);
+
 -- (Opcional) Bosquejo RLS para siguientes sprints
 -- alter table productos enable row level security;
 -- create policy productos_por_tenant on productos
