@@ -7,6 +7,28 @@ Esta carpeta contiene toda la documentación del proyecto organizada por categor
 ### `/setup/` - Guías de Configuración
 - **`SETUP.md`** - Guía general de configuración del proyecto
 - **`SUPABASE_SETUP.md`** - Configuración específica de Supabase
+- **`CONFIGURACION_EMAILS.md`** - Configuración de emails
+
+### `/docker/` - Documentación Docker
+- **`DOCKER_IMPLEMENTATION.md`** - Implementación completa Docker
+- **`DOCKER_GUIDE.md`** - Guía completa de uso
+
+### `/security/` - Documentación de Seguridad
+- **`SECURITY_SYSTEM.md`** - Sistema de seguridad
+- **`SECURITY_INTEGRATION_COMPLETE.md`** - Integración completa
+
+### `/dashboards/` - Documentación de Dashboards
+- **`DASHBOARD_CORPORATIVO_RESUMEN.md`** - Resumen dashboards
+- **`DASHBOARD_ENHANCED.md`** - Dashboards mejorados
+- **`METRICAS_*.md`** - Documentación de métricas
+
+### `/technical/` - Documentación Técnica
+- **`EMPLOYEE_MANAGEMENT_IMPLEMENTATION.md`** - Gestión empleados
+- **`ESTADO_BASE_DATOS_OPTIMIZADA.md`** - Estado base de datos
+- **`VALIDATION_REPORT.md`** - Reportes de validación
+- **`REPOSITORY_REVIEW.md`** - Revisión del repositorio
+- **`PROXIMOS_PASOS.md`** - Próximos pasos
+- **`README_BACKUP.md`** - Respaldo README anterior
 
 ### `/github/` - Archivos de GitHub
 - **`PULL_REQUEST_TEMPLATE.md`** - Plantilla para Pull Requests

@@ -1,0 +1,41 @@
+{
+  "name": "automarket-multitenant-workspace",
+  "version": "1.0.0",
+  "description": "AutoMarket MultiTenant - Workspace completo",
+  "private": true,
+  "workspaces": [
+    "app",
+    "api"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:app\"",
+    "dev:api": "cd api && npm run dev",
+    "dev:app": "cd app && npm run dev",
+    "build": "npm run build:api && npm run build:app",
+    "build:api": "cd api && npm run build",
+    "build:app": "cd app && npm run build",
+    "test": "npm run test:api && npm run test:app",
+    "test:api": "cd api && npm test",
+    "test:app": "cd app && npm test",
+    "lint": "npm run lint:api && npm run lint:app",
+    "lint:api": "cd api && npm run lint",
+    "lint:app": "cd app && npm run lint",
+    "db:migrate": "cd api && npm run db:migrate",
+    "db:seed": "cd api && npm run db:seed",
+    "db:reset": "cd api && npm run db:reset",
+    "docker:dev": "docker-compose --profile development up -d",
+    "docker:prod": "docker-compose up -d",
+    "docker:build": "docker-compose build --no-cache",
+    "docker:clean": "docker-compose down -v && docker system prune -f",
+    "install:all": "npm run install:api && npm run install:app",
+    "install:api": "cd api && npm install",
+    "install:app": "cd app && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

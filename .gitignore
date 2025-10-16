@@ -1,25 +1,32 @@
-# Logs
-logs
-*.log
+# =====================================
+# AutoMarket MultiTenant - .gitignore
+# =====================================
+
+# =============
+# NODE.JS
+# =============
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# Dependencies
-node_modules/
 .pnp
 .pnp.js
 
-# Build outputs
+# =============
+# BUILD OUTPUTS
+# =============
 dist/
 dist-ssr/
 build/
 .next/
 out/
+coverage/
 
-# Environment variables
+# =============
+# ENVIRONMENT
+# =============
 .env
 .env.local
 .env.development.local
@@ -27,35 +34,103 @@ out/
 .env.production.local
 .env.production
 
-# Cache directories
+# =============
+# LOGS
+# =============
+logs/
+*.log
+
+# =============
+# CACHE & TEMP
+# =============
 .cache/
 .vite/
 .turbo/
 .vercel/
-
-# Temporary files
 *.tmp
 *.temp
 *_temp.*
 *Fixed.*
+
+# =============
+# DATABASE
+# =============
+*.db
+*.sqlite
+*.sqlite3
 migration_corporate.sql
+
+# =============
+# PYTHON
+# =============
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
 cleanup_*.sql
 test_*.sql
 
-# Editor directories and files
+# =============
+# EDITORS & IDEs
+# =============
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea/
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# OS generated files
-Thumbs.db
+# =============
+# OS GENERATED
+# =============
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 ehthumbs.db
+Thumbs.db
+
+# =============
+# DOCKER
+# =============
+.dockerignore
+
+# =============
+# TESTING
+# =============
+coverage/
+.nyc_output/
+junit.xml
+
+# =============
+# DEPLOYMENT
+# =============
+.vercel/
+.netlify/
+
+# =============
+# SECURITY
+# =============
+.env.backup
+*.key
+*.pem
+*.crt
+*.cert
+
+# =============
+# PROJECT SPECIFIC
+# =============
+uploads/
+**/node_modules/
+**/dist/
+**/.env
 Desktop.ini
 
 # Development utilities
@@ -64,3 +139,16 @@ Start-*.ps1
 testConnection.*
 utils/test*
 **/utils/test*
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Documentation build
+docs/_build/
+docs/.doctrees/
