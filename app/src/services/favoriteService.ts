@@ -112,7 +112,8 @@ export const favoriteService = {
       
       const favoriteData: FavoriteInsert = {
         user_id: userId,
-        vehicle_id: vehicleId
+        vehicle_id: vehicleId,
+        tenant_id: 'default' // TODO: obtener tenant_id correctamente
       }
 
       const { data, error } = await (supabase as any)

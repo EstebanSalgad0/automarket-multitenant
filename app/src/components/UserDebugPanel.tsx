@@ -64,8 +64,8 @@ const UserDebugPanel = () => {
             <p className="debug-hint">
               💡 <strong>Solución:</strong> Asegúrate de que:
               <ul>
-                <li>La tabla 'users' existe en Supabase</li>
-                <li>Tienes un registro en la tabla 'users' con tu ID</li>
+                <li>La tabla 'user_profiles' existe en Supabase</li>
+                <li>Tienes un registro en la tabla 'user_profiles' con tu ID</li>
                 <li>La columna 'role' existe en la tabla</li>
               </ul>
             </p>

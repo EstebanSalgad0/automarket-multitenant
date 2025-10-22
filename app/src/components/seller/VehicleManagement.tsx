@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { vehicleService, type VehicleWithImages } from '../../services/vehicleService'
+import { createVehicleService, type VehicleWithImages } from '../../services/vehicleService'
 import { useAuth } from '../../hooks/useAuth'
 
 import { PermissionGuard, SellerGuard } from '../security/PermissionGuards'
@@ -28,6 +28,7 @@ export default function VehicleManagement() {
     
     setLoading(true)
     try {
+      const vehicleService = createVehicleService(user.user_metadata?.tenant_id || 'default')
       const { vehicles: userVehicles } = await vehicleService.getUserVehicles(user.id)
       setVehicles(userVehicles)
     } catch (error) {
@@ -53,8 +54,9 @@ export default function VehicleManagement() {
     try {
       // Obtener información del vehículo antes de eliminarlo
       const vehicle = vehicles.find(v => v.id === vehicleId)
-      const vehicleInfo = vehicle ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}` : `ID: ${vehicleId}`
+      const vehicleInfo = vehicle ? `${vehicle.marca || vehicle.brand} ${vehicle.modelo || vehicle.model} ${vehicle.año || vehicle.year}` : `ID: ${vehicleId}`
       
+      const vehicleService = createVehicleService(user?.user_metadata?.tenant_id || 'default')
       const { error } = await vehicleService.deleteVehicle(vehicleId)
       if (error) {
         alert('Error al eliminar el vehículo: ' + error.message)
@@ -82,6 +84,7 @@ export default function VehicleManagement() {
 
   const handleStatusChange = async (vehicleId: string, newStatus: 'active' | 'sold' | 'reserved' | 'draft' | 'suspended') => {
     try {
+      const vehicleService = createVehicleService(user?.user_metadata?.tenant_id || 'default')
       const { error } = await vehicleService.updateVehicleStatus(vehicleId, newStatus)
       if (error) {
         alert('Error al actualizar el estado: ' + error.message)

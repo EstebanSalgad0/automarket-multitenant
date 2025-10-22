@@ -37,8 +37,8 @@ export const useUserRole = (): UserRoleData => {
 
       try {
         const { data, error } = await supabase
-          .from('users')
-          .select('role, full_name, branch_id')
+          .from('user_profiles')
+          .select('role, full_name, tenant_id')
           .eq('id', user.id)
           .single()
 
@@ -59,7 +59,7 @@ export const useUserRole = (): UserRoleData => {
         setRoleData({
           role: (userData?.role as UserRole) || null,
           fullName: userData?.full_name || null,
-          branchId: userData?.branch_id || null,
+          branchId: userData?.tenant_id || null, // Usamos tenant_id como branchId
           loading: false,
           error: null
         })
@@ -68,7 +68,7 @@ export const useUserRole = (): UserRoleData => {
           email: user.email,
           role: userData?.role,
           fullName: userData?.full_name,
-          branchId: userData?.branch_id
+          tenantId: userData?.tenant_id
         })
       } catch (err) {
         console.error('Error en useUserRole:', err)

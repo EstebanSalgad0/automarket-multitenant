@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { vehicleService, type VehicleWithImages } from '../../services/vehicleService'
+import { createVehicleService, type VehicleWithImages } from '../../services/vehicleService'
 import { useAuth } from '../../hooks/useAuth'
 import './VehicleForm.css'
 
@@ -52,6 +52,8 @@ export default function VehicleForm({ vehicle, onClose, onSuccess }: VehicleForm
         seller_id: user.id
       }
 
+      const vehicleService = createVehicleService(user.user_metadata?.tenant_id || 'default')
+      
       if (vehicle) {
         // Actualizar vehículo existente
         const { error } = await vehicleService.updateVehicle(vehicle.id, vehicleData)

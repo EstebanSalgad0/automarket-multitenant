@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './VehiclesCatalog.css';
-import { vehicleService } from '../services/vehicleService';
+import { VehicleServiceSimple } from '../services/vehicleServiceSimple';
 
 interface Vehicle {
-  id: number;
+  id: string;
+  marca: string;
+  modelo: string;
+  año: number;
+  precio: number;
+  kilometraje: number;
+  color: string;
+  combustible: string;
+  transmision: string;
+  descripcion: string;
+  estado: string;
+  tenant_id: string;
+  created_at: string;
+  // Campos calculados para compatibilidad con el componente
   title: string;
   price: string;
   year: number;
@@ -62,26 +75,36 @@ const VehiclesCatalog: React.FC<VehiclesCatalogProps> = ({ onBack, initialFilter
     try {
       setLoading(true);
       setError(null);
+      
+      const vehicleService = new VehicleServiceSimple();
+      
+      // Inicializar datos de ejemplo si es necesario
+      await vehicleService.initializeSampleData();
+      
       const result = await vehicleService.getVehicles();
       
+      if (result.error) {
+        setError(result.error.message);
+        return;
+      }
+      
       // Transformar datos de Supabase al formato del componente
-      const transformedVehicles: Vehicle[] = result.vehicles.map((v: any, index: number) => ({
-        id: index + 1, // Usar índice como ID temporal (el UUID no se puede convertir a número)
-        title: `${v.make} ${v.model}`,
-        price: `$${(v.price / 1).toLocaleString('es-CL')}`,
-        year: v.year,
-        mileage: `${(v.mileage || 0).toLocaleString('es-CL')} km`,
-        transmission: v.transmission === 'automatic' ? 'Automática' : 'Manual',
-        fuel: v.fuel_type === 'gasoline' ? 'Gasolina' : v.fuel_type === 'diesel' ? 'Diésel' : v.fuel_type === 'electric' ? 'Eléctrico' : 'Híbrido',
-        images: v.vehicle_images?.length > 0 
-          ? v.vehicle_images.map((img: any) => img.image_url) 
-          : [`https://placehold.co/800x600/4299E1/ffffff?text=${encodeURIComponent(v.make + ' ' + v.model)}`],
-        sellerType: 'dealer',
-        sellerName: v.tenants?.name || 'AutoMarket',
-        location: v.branches?.city || 'Chile',
-        brand: v.make,
-        model: v.model,
-        type: v.body_type === 'sedan' ? 'Sedán' : v.body_type === 'suv' ? 'SUV' : v.body_type === 'hatchback' ? 'Hatchback' : v.body_type === 'pickup' ? 'Pickup' : 'Otro'
+      const transformedVehicles: Vehicle[] = result.vehicles.map((v: any) => ({
+        ...v, // Mantener todos los campos originales
+        // Campos calculados para compatibilidad con el componente
+        title: `${v.marca} ${v.modelo}`,
+        price: `$${v.precio.toLocaleString('es-CL')}`,
+        year: v.año,
+        mileage: `${v.kilometraje.toLocaleString('es-CL')} km`,
+        transmission: v.transmision === 'Automático' ? 'Automática' : 'Manual',
+        fuel: v.combustible,
+        images: [`https://placehold.co/800x600/4299E1/ffffff?text=${encodeURIComponent(v.marca + ' ' + v.modelo)}`],
+        sellerType: 'dealer' as const,
+        sellerName: v.tenants?.nombre || 'AutoMarket Demo',
+        location: 'Chile',
+        brand: v.marca,
+        model: v.modelo,
+        type: 'Sedán'
       }));
       
       setVehicles(transformedVehicles);

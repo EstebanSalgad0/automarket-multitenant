@@ -3,7 +3,8 @@ import './App.css'
 import UserProfile from './components/UserProfile'
 import DealerRegistration from './components/DealerRegistration'
 import SellerRegistration from './components/SellerRegistration'
-import VehiclesCatalog from './components/VehiclesCatalog'
+import VehiclesCatalogSimple from './components/VehiclesCatalogSimple'
+import VehiclesCatalogWorking from './components/VehiclesCatalogWorking'
 import BranchList from './components/BranchList'
 import LeadList from './components/LeadList'
 import CorporateAdminDashboardReal from './components/dashboards/CorporateAdminDashboardReal'
@@ -12,7 +13,7 @@ import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
 import RoleBasedDashboard from './components/dashboards/RoleBasedDashboard'
 import CustomerDashboard from './components/dashboards/CustomerDashboard'
 import LoginModal from './components/LoginModal'
-import SupabaseDebugPanel from './components/SupabaseDebugPanel'
+// import SupabaseDebugPanel from './components/SupabaseDebugPanel' // DESHABILITADO
 import UserDebugPanel from './components/UserDebugPanel'
 import AutoMarketIcon from './components/AutoMarketIcon'
 import SecurityTest from './components/test/SecurityTest'
@@ -167,7 +168,7 @@ function App() {
   }
 
   if (currentView === 'vehicles-catalog') {
-    return <VehiclesCatalog onBack={() => setCurrentView('home')} initialFilters={searchFilters} />
+    return <VehiclesCatalogWorking onBack={() => setCurrentView('home')} />
   }
 
   if (currentView === 'customer-dashboard') {
@@ -993,7 +994,7 @@ function App() {
       />
 
       {/* Panel de Debug (solo en desarrollo) */}
-      <SupabaseDebugPanel />
+      {/* <SupabaseDebugPanel /> */}
       
       {/* Panel de Debug de Usuario */}
       {user && <UserDebugPanel />}
