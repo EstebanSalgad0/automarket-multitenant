@@ -7,6 +7,8 @@ import VehiclesCatalogSimple from './components/VehiclesCatalogSimple'
 import VehiclesCatalogWorking from './components/VehiclesCatalogWorking'
 import BranchList from './components/BranchList'
 import LeadList from './components/LeadList'
+import AddVehicleForm from './components/AddVehicleForm'
+import VehicleList from './components/VehicleList'
 import CorporateAdminDashboardReal from './components/dashboards/CorporateAdminDashboardReal'
 import BranchManagerDashboard from './components/dashboards/BranchManagerDashboard'
 import SalesPersonDashboard from './components/dashboards/SalesPersonDashboard'
@@ -30,7 +32,7 @@ interface SearchFilters {
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard' | 'enhanced-dashboard' | 'customer-dashboard' | 'security-test' | 'database-test' | 'realtime-test'>('home')
+  const [currentView, setCurrentView] = useState<'home' | 'profile' | 'dealer-registration' | 'seller-registration' | 'vehicles-catalog' | 'branches' | 'leads' | 'corporate-dashboard' | 'branch-dashboard' | 'sales-dashboard' | 'enhanced-dashboard' | 'customer-dashboard' | 'security-test' | 'database-test' | 'realtime-test' | 'add-vehicle' | 'vehicle-list'>('home')
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     type: '',
     brand: '',
@@ -65,6 +67,29 @@ function App() {
 
   if (currentView === 'seller-registration') {
     return <SellerRegistration onBack={() => setCurrentView('home')} />
+  }
+
+  if (currentView === 'add-vehicle') {
+    return (
+      <div>
+        <button onClick={() => setCurrentView('home')} style={{ 
+          margin: '20px', 
+          padding: '10px 20px', 
+          backgroundColor: '#6b7280', 
+          color: 'white', 
+          border: 'none', 
+          borderRadius: '8px',
+          cursor: 'pointer'
+        }}>
+          ← Volver al inicio
+        </button>
+        <AddVehicleForm />
+      </div>
+    )
+  }
+
+  if (currentView === 'vehicle-list') {
+    return <VehicleList onBack={() => setCurrentView('home')} />
   }
 
   if (currentView === 'branches') {
@@ -255,6 +280,7 @@ function App() {
           
           <nav className="nav-menu">
             <button className="nav-link" onClick={() => setCurrentView('customer-dashboard')}>🚗 Panel Cliente</button>
+            <button className="nav-link" onClick={() => setCurrentView('vehicle-list')}>📋 Ver Vehículos</button>
             <button className="nav-link" onClick={() => setCurrentView('vehicles-catalog')}>Comprar</button>
             <button className="nav-link" onClick={() => setCurrentView('branches')}>Sucursales</button>
             <button className="nav-link" onClick={() => setCurrentView('leads')}>Leads</button>
@@ -523,7 +549,7 @@ function App() {
               <button 
                 className="btn-view-all"
                 onClick={() => {
-                  setCurrentView('vehicles-catalog');
+                  setCurrentView('vehicle-list');
                   setShowSearchResults(false);
                 }}
               >
@@ -859,6 +885,30 @@ function App() {
                 onClick={() => setCurrentView('seller-registration')}
               >
                 Vender mi auto
+              </button>
+            </div>
+
+            {/* Nuevo botón para agregar vehículo directamente */}
+            <div className="plan-card" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+              <div className="plan-icon">🚗</div>
+              <h3 style={{ color: 'white' }}>¿Ya tienes cuenta?</h3>
+              <p style={{ color: 'rgba(255,255,255,0.9)' }}>Agrega un nuevo vehículo directamente</p>
+              <ul className="plan-features">
+                <li style={{ color: 'rgba(255,255,255,0.9)' }}>• Acceso inmediato</li>
+                <li style={{ color: 'rgba(255,255,255,0.9)' }}>• Formulario completo</li>
+                <li style={{ color: 'rgba(255,255,255,0.9)' }}>• Publicación instantánea</li>
+                <li style={{ color: 'rgba(255,255,255,0.9)' }}>• Para usuarios registrados</li>
+              </ul>
+              <button 
+                className="btn-primary"
+                onClick={() => setCurrentView('add-vehicle')}
+                style={{ 
+                  backgroundColor: 'white', 
+                  color: '#667eea',
+                  fontWeight: 'bold'
+                }}
+              >
+                🚗 Agregar Vehículo
               </button>
             </div>
           </div>
